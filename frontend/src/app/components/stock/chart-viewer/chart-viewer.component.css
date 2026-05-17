@@ -1,0 +1,334 @@
+// src/app/components/chart-viewer/chart-viewer.component.scss
+
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  background: var(--void);
+  flex: 1;
+  min-height: 0;
+}
+
+.main-chart-area {
+  width: 100%;
+  position: relative;
+}
+
+.chart-container {
+  width: 100%;
+  min-height: 500px;
+}
+
+// RSI
+.rsi-area {
+  border-top: 1px solid var(--border);
+
+  .rsi-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 16px;
+    background: var(--void);
+
+    .rsi-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-2);
+      padding: 2px 8px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      background: var(--panel-raised);
+    }
+
+    .rsi-value {
+      font-size: 0.85rem;
+      color: #ff9800;
+      font-weight: 600;
+    }
+  }
+
+  .rsi-container {
+    width: 100%;
+    min-height: 150px;
+  }
+}
+
+// ===== Forecast Overlay =====
+.forecast-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(13, 13, 25, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  backdrop-filter: blur(4px);
+}
+
+.forecast-loader {
+  width: 400px;
+  max-width: 90%;
+  padding: 28px;
+  background: var(--panel);
+  border: 1px solid rgba(0, 230, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0, 230, 255, 0.08);
+
+  .loader-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    .brain-icon {
+      font-size: 1.8rem;
+    }
+
+    .loader-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+  }
+
+  .training-phase {
+    .phase-indicator {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+
+      .phase-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+
+        .step-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: #333;
+          border: 2px solid #444;
+          transition: all 0.3s;
+        }
+
+        span:last-child {
+          font-size: 0.7rem;
+          color: #555;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        &.active {
+          .step-dot {
+            background: var(--cyan);
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px rgba(0, 230, 255, 0.5);
+            animation: pulse 1.5s ease-in-out infinite;
+          }
+
+          span:last-child {
+            color: var(--cyan);
+          }
+        }
+
+        &.done {
+          .step-dot {
+            background: #26a69a;
+            border-color: #26a69a;
+          }
+
+          span:last-child {
+            color: #26a69a;
+          }
+        }
+      }
+
+      .phase-line {
+        flex: 1;
+        height: 2px;
+        background: #333;
+        margin: 0 8px;
+        margin-bottom: 20px;
+        transition: background 0.3s;
+
+        &.active {
+          background: #26a69a;
+        }
+      }
+    }
+
+    .progress-bar-wrap {
+      margin-bottom: 14px;
+
+      .progress-bar {
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, var(--cyan), var(--cyan));
+          border-radius: 3px;
+          transition: width 0.3s ease;
+        }
+      }
+
+      .progress-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-size: 0.75rem;
+        color: var(--text-2);
+
+        .loss-value {
+          font-family: 'Courier New', monospace;
+          color: var(--cyan);
+        }
+      }
+    }
+
+    .progress-msg {
+      font-size: 0.82rem;
+      color: var(--text-2);
+      text-align: center;
+    }
+  }
+
+  .simple-loader {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    justify-content: center;
+
+    span {
+      color: var(--cyan);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid #333;
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+// ===== Forecast Badge =====
+.forecast-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(0, 230, 255, 0.06);
+  border: 1px solid rgba(0, 230, 255, 0.2);
+  border-radius: 8px;
+  z-index: 10;
+  font-size: 0.78rem;
+
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px rgba(0, 230, 255, 0.5);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .badge-label {
+    color: var(--cyan);
+    font-weight: 700;
+  }
+
+  .badge-tag {
+    font-size: 0.7rem;
+    background: rgba(0, 230, 255, 0.12);
+    color: var(--cyan);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .badge-conf {
+    color: var(--text-2);
+  }
+
+  .badge-days {
+    color: #666;
+    padding-left: 4px;
+    border-left: 1px solid #333;
+  }
+
+  &.error {
+    background: rgba(239, 83, 80, 0.08);
+    border-color: rgba(239, 83, 80, 0.25);
+
+    .badge-label {
+      color: #ef5350;
+    }
+  }
+
+  // Add inside .forecast-badge styles
+
+  .badge-tag {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+
+    &.gpu {
+      background: rgba(0, 230, 255, 0.15);
+      color: var(--cyan);
+    }
+
+    &.cpu {
+      background: rgba(255, 152, 0, 0.15);
+      color: #ff9800;
+    }
+  }
+}
+
+.forecast-notice {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  padding: 8px 14px;
+  background: rgba(255, 152, 0, 0.08);
+  border: 1px solid rgba(255, 152, 0, 0.2);
+  border-radius: 8px;
+  z-index: 10;
+
+  span {
+    font-size: 0.78rem;
+    color: #ff9800;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}

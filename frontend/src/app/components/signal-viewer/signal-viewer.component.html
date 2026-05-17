@@ -1,0 +1,436 @@
+<main class="sv-main">
+
+  <!-- ── Signal Type Tabs (ECG / EEG) ── -->
+  <div class="sv-tabs">
+    <button class="sv-tab-btn" [class.active]="activeSignalTab === 'ecg'" data-tab="ecg" type="button" (click)="switchSignalTab('ecg')">
+      <span class="sv-tab-icon">🫀</span>
+      ECG
+      <span class="sv-tab-badge">ELECTROCARDIOGRAM</span>
+    </button>
+    <button class="sv-tab-btn" [class.active]="activeSignalTab === 'eeg'" data-tab="eeg" type="button" (click)="switchSignalTab('eeg')">
+      <span class="sv-tab-icon">🧠</span>
+      EEG
+      <span class="sv-tab-badge">ELECTROENCEPHALOGRAM</span>
+    </button>
+  </div>
+
+  <!-- ══ ECG TAB PANE ══ -->
+  <div class="sv-tab-pane" [class.active]="activeSignalTab === 'ecg'">
+
+    <div class="sv-drop" [class.drag-over]="isDragOver" [class.uploading]="isUploading"
+         (click)="onUploadClick(fileInput)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave()" (drop)="onDrop($event)">
+      <input #fileInput type="file" style="display:none" accept="*" multiple (change)="onFileChange($event)">
+      <div class="sv-drop-icon">
+        <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="7" width="34" height="30" rx="3"/>
+          <path d="M22 31V19M15 25l7-6 7 6"/><path d="M12 37h20"/>
+        </svg>
+      </div>
+      <div class="sv-drop-title">Upload ECG Record</div>
+      <div class="sv-drop-desc">Select <strong>ALL files</strong> for a record together (.hea + .dat + .xyz + any others) — or a <strong>.csv</strong> for quick preview</div>
+      <div class="sv-drop-badge">.HEA + ALL COMPANION FILES · WFDB · MULTI-LEAD · AUTO-DETECT</div>
+    </div>
+
+    <div class="sv-error" [class.show]="showError">{{ errorMsg }}</div>
+
+    <div class="sv-meta-bar" [class.show]="showMetaBar">
+      <div class="sv-meta-item"><div class="sv-meta-label">Record</div><div class="sv-meta-value">{{ mRecord }}</div></div>
+      <div class="sv-meta-sep"></div>
+      <div class="sv-meta-item"><div class="sv-meta-label">Sample Rate</div><div class="sv-meta-value">{{ mFs }}</div></div>
+      <div class="sv-meta-sep"></div>
+      <div class="sv-meta-item"><div class="sv-meta-label">Leads</div><div class="sv-meta-value">{{ mLeads }}</div></div>
+      <div class="sv-meta-sep"></div>
+      <div class="sv-meta-item"><div class="sv-meta-label">Duration</div><div class="sv-meta-value">{{ mDuration }}</div></div>
+      <div class="sv-meta-sep"></div>
+      <div class="sv-meta-item"><div class="sv-meta-label">Total Samples</div><div class="sv-meta-value">{{ mSamples }}</div></div>
+      <div class="sv-meta-sep"></div>
+      <div class="sv-meta-item"><div class="sv-meta-label">Lead Names</div><div class="sv-meta-value">{{ mSigNames }}</div></div>
+    </div>
+
+    <div [ngClass]="aiPanelClass" *ngIf="showAiPanel">
+      <div class="sv-ai-header">
+        <div class="sv-ai-badge">
+          <div class="sv-ai-icon">{{ aiIcon }}</div>
+          <div>
+            <div class="sv-ai-primary-label" [style.color]="aiPrimaryLabelColor">{{ aiPrimaryLabel }}</div>
+            <div class="sv-ai-primary-sub">{{ aiPrimarySub }}</div>
+          </div>
+        </div>
+        <div class="sv-ai-vitals">
+          <div class="sv-ai-vital"><div class="sv-ai-vital-val">{{ aiHR }}</div><div class="sv-ai-vital-lbl">HR bpm</div></div>
+          <div class="sv-ai-vital"><div class="sv-ai-vital-val">{{ aiLeads }}</div><div class="sv-ai-vital-lbl">Leads</div></div>
+          <div class="sv-ai-conf-ring">
+            <svg viewBox="0 0 64 64">
+              <circle class="sv-ai-conf-ring-bg" cx="32" cy="32" r="27"/>
+              <circle class="sv-ai-conf-ring-fill" cx="32" cy="32" r="27"
+                [style.stroke]="aiRingStroke" [style.stroke-dasharray]="aiRingDashArray" [style.stroke-dashoffset]="aiRingDashOffset"/>
+            </svg>
+            <div class="sv-ai-conf-pct" [style.color]="aiConfPctColor">{{ aiConfPct }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="sv-ai-body">
+        <div class="sv-ai-description" [style.border-color]="aiDescriptionBorderColor" [style.background]="aiDescriptionBg">{{ aiDescription }}</div>
+        <div class="sv-ai-action" *ngIf="showAiAction"><span class="sv-ai-action-icon">⚕</span><span>{{ aiActionText }}</span></div>
+        <div class="sv-ai-findings" *ngIf="showAiFindings">
+          <div class="sv-ai-findings-title">ALL DETECTED FINDINGS</div>
+          <div *ngFor="let f of aiFindings" class="sv-ai-finding">
+            <div class="sv-ai-finding-dot" [style.background]="f.color" [style.box-shadow]="'0 0 6px '+f.color+'66'"></div>
+            <div class="sv-ai-finding-label">{{ f.label }}</div>
+            <div class="sv-ai-finding-bar-wrap"><div class="sv-ai-finding-bar" [style.width]="f.barWidth" [style.background]="f.color"></div></div>
+            <div class="sv-ai-finding-pct">{{ (f.confidence * 100).toFixed(0) }}%</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div class="sv-ai-method-tag">{{ aiMethodTag }}</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);letter-spacing:0.06em">⚠ FOR CLINICAL DECISION SUPPORT ONLY — NOT A DIAGNOSTIC DEVICE</div>
+        </div>
+        <div *ngIf="aiLeadsNote" style="font-family:var(--font-mono);font-size:9px;color:var(--text-2);letter-spacing:0.06em;margin-top:4px">{{ aiLeadsNote }}</div>
+      </div>
+    </div>
+
+    <div *ngIf="showPlotModeChoice">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>SELECT DISPLAY MODE</div><div class="sv-tag">CONFIGURATION</div></div>
+        <div class="sv-card-body">
+          <div class="sv-mode-grid">
+            <button class="sv-mode-btn" type="button" (click)="activateSeparate()"><span class="sv-mode-icon">⊟</span><div class="sv-mode-title">SEPARATE WINDOWS</div><div class="sv-mode-desc">Each lead in its own viewport with independent Y-scale, playback controls, and inline STYLE button</div></button>
+            <button class="sv-mode-btn" type="button" (click)="activateSingle()"><span class="sv-mode-icon">⊞</span><div class="sv-mode-title">SINGLE WINDOW</div><div class="sv-mode-desc">All leads overlaid with per-channel mini sub-axes for direct amplitude comparison</div></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="showChannelCustomSection">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>CHANNEL CUSTOMIZATION</div><div class="sv-tag">STYLE</div></div>
+        <div class="sv-card-body" #channelCustomBody style="display:flex;flex-wrap:wrap;gap:16px;padding:16px 20px"></div>
+      </div>
+    </div>
+
+    <div *ngIf="showGlobalConfigBar">
+      <div class="sv-channel" style="animation:none">
+        <div class="sv-channel-head">
+          <div class="sv-channel-meta"><div style="width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);flex-shrink:0"></div><div style="font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--cyan)">ALL LEADS</div></div>
+          <div class="sv-toolbar">
+            <button class="sv-btn play" type="button" (click)="gBtnPlay()">▶ PLAY ALL</button>
+            <button class="sv-btn pause" type="button" (click)="gBtnPause()">⏸ PAUSE ALL</button>
+            <div style="width:1px;height:18px;background:var(--border);margin:0 2px"></div>
+            <button class="sv-btn yzoom" type="button" (click)="gBtnAmpIn()">↕ AMP+</button>
+            <button class="sv-btn yzoom" type="button" (click)="gBtnAmpOut()">↕ AMP−</button>
+            <button class="sv-btn" type="button" (click)="gBtnReset()">↺ RESET</button>
+            <div class="sv-yscale-badge">{{ gAmpBadge }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div #channelsContainer></div>
+
+    <div *ngIf="showPeriodSection">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>WINDOW WIDTH</div><div class="sv-tag">TEMPORAL</div></div>
+        <div class="sv-card-body">
+          <p class="sv-section-desc">Controls how many samples are visible. Drag or scroll the canvas to pan. Use <strong>AMP+/AMP−</strong> to scale vertically.</p>
+          <div class="sv-controls-row">
+            <span class="sv-ctrl-label">WINDOW</span>
+            <input type="range" [min]="periodSliderMin" [max]="periodSliderMax" [value]="periodValue" (input)="onPeriodSliderChange($event)">
+            <input type="number" [value]="windowInput" min="10" step="10" style="width:80px;padding:4px 8px;font-family:var(--font-mono);font-size:12px;color:var(--cyan);background:var(--panel-raised);border:1px solid var(--border-accent);border-radius:var(--radius);outline:none;text-align:center;-moz-appearance:textfield;" (input)="onWindowInputChange($event)" (blur)="onWindowInputBlur($event)" (keydown)="onWindowInputKeydown($event)">
+            <div class="sv-ctrl-value"><span style="font-size:9px;color:var(--text-2);font-family:var(--font-mono)">SAMPLES</span></div>
+          </div>
+          <div class="sv-controls-row" style="margin-top:14px">
+            <span class="sv-ctrl-label">SPEED</span>
+            <input type="range" min="-20" max="20" step="0.5" [value]="speedSlider" style="flex:1;min-width:180px;max-width:480px" (input)="onSpeedSliderChange($event)">
+            <input type="number" [value]="speedInput" step="0.5" style="width:72px;padding:4px 8px;font-family:var(--font-mono);font-size:12px;color:var(--cyan);background:var(--panel-raised);border:1px solid var(--border-accent);border-radius:var(--radius);outline:none;text-align:center;-moz-appearance:textfield;" (input)="onSpeedInputChange($event)" (blur)="onSpeedInputBlur($event)" (keydown)="onSpeedInputKeydown($event)">
+            <span style="font-size:9px;color:var(--text-2);font-family:var(--font-mono)">×</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="showRecurrenceSection">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>LEAD CROSS-ANALYSIS</div><div class="sv-tag">SCATTER</div></div>
+        <div class="sv-card-body">
+          <p class="sv-section-desc">Plot two leads against each other — reveals correlation and phase-space relationships between channels</p>
+          <div class="sv-plot-controls">
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">X-AXIS</span><select [(ngModel)]="rCh1"><option *ngFor="let o of rCh1Options" [value]="o.value">{{ o.label }}</option></select></div>
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">Y-AXIS</span><select [(ngModel)]="rCh2"><option *ngFor="let o of rCh2Options" [value]="o.value">{{ o.label }}</option></select></div>
+            <button class="sv-render-btn" type="button" (click)="renderRecurrence()">▶ RENDER</button>
+            <button id="btnSnapR" class="sv-btn snap" type="button" [style.display]="showBtnSnapR ? 'inline-flex' : 'none'">◉ SNAP</button>
+            <button id="btnResetR" class="sv-btn" type="button" [style.display]="showBtnResetR ? 'inline-flex' : 'none'">↺ RESET VIEW</button>
+            <div id="scatterZoomBadge" class="sv-yscale-badge" [style.display]="showScatterZoomBadge ? 'inline-block' : 'none'">ZOOM ×1.00</div>
+          </div>
+          <div class="sv-canvas-wrap" style="height:520px;background:#040810;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;">
+            <canvas #recurrenceCanvas style="width:100%;height:100%;background:#040810;cursor:crosshair;display:block;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="showPolarSection">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>POLAR VISUALIZATION</div><div class="sv-tag">PHASE SPACE</div></div>
+        <div class="sv-card-body">
+          <p class="sv-section-desc">Single lead in polar coordinates: r = amplitude, θ = time — periodic signals form closed loops</p>
+          <div class="sv-plot-controls">
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">LEAD</span><select [(ngModel)]="pCh"><option *ngFor="let o of pChOptions" [value]="o.value">{{ o.label }}</option></select></div>
+            <button class="sv-render-btn" type="button" (click)="renderPolar()">▶ RENDER</button>
+            <button id="btnSnapP" class="sv-btn snap" type="button" [style.display]="showBtnSnapP ? 'inline-flex' : 'none'">◉ SNAP</button>
+            <button id="btnResetP" class="sv-btn" type="button" [style.display]="showBtnResetP ? 'inline-flex' : 'none'">↺ RESET VIEW</button>
+            <div id="polarZoomBadge" class="sv-yscale-badge" [style.display]="showPolarZoomBadge ? 'inline-block' : 'none'">ZOOM ×1.00</div>
+          </div>
+          <div class="sv-canvas-wrap" style="height:520px;background:#040810;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;">
+            <canvas #polarCanvas style="width:100%;height:100%;background:#040810;cursor:crosshair;display:block;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="showPolar2Section">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>POLAR RATIO</div><div class="sv-tag">DUAL-LEAD</div></div>
+        <div class="sv-card-body">
+          <p class="sv-section-desc">Two leads in polar space: r = |Lead A| / |Lead B|, θ = time — tracks amplitude ratio across cycles</p>
+          <div class="sv-plot-controls">
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">NUMERATOR</span><select [(ngModel)]="p2Ch1"><option *ngFor="let o of p2Ch1Options" [value]="o.value">{{ o.label }}</option></select></div>
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">DENOMINATOR</span><select [(ngModel)]="p2Ch2"><option *ngFor="let o of p2Ch2Options" [value]="o.value">{{ o.label }}</option></select></div>
+            <button class="sv-render-btn" type="button" (click)="renderPolar2()">▶ RENDER</button>
+            <button id="btnSnapP2" class="sv-btn snap" type="button" [style.display]="showBtnSnapP2 ? 'inline-flex' : 'none'">◉ SNAP</button>
+            <button id="btnResetP2" class="sv-btn" type="button" [style.display]="showBtnResetP2 ? 'inline-flex' : 'none'">↺ RESET VIEW</button>
+            <div id="polar2ZoomBadge" class="sv-yscale-badge" [style.display]="showPolar2ZoomBadge ? 'inline-block' : 'none'">ZOOM ×1.00</div>
+          </div>
+          <div class="sv-canvas-wrap" style="height:520px;background:#040810;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;">
+            <canvas #polar2Canvas style="width:100%;height:100%;background:#040810;cursor:crosshair;display:block;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="showXorSection">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>XOR STACK GRAPH</div><div class="sv-tag">ANOMALY DETECTOR</div></div>
+        <div class="sv-card-body">
+          <p class="sv-section-desc">The signal is divided into chunks equal to the current <strong>window width</strong>. For every sample position within that window, the <strong>standard deviation across all chunks</strong> is computed. Dark = periodic. Cyan → Amber → Red = anomaly. White line shows average heartbeat shape.</p>
+          <div class="sv-plot-controls">
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">LEAD</span><select [(ngModel)]="xorCh"><option *ngFor="let o of xorChOptions" [value]="o.value">{{ o.label }}</option></select></div>
+            <div class="sv-ctrl-group">
+              <span class="sv-ctrl-label">SENSITIVITY</span>
+              <input type="range" [(ngModel)]="xorThresh" min="1" max="50" style="width:100px;min-width:0" (input)="onXorThreshChange($event)">
+              <span style="font-family:var(--font-mono);font-size:10px;color:var(--green);min-width:28px">{{ xorThreshVal }}</span>
+            </div>
+            <button class="sv-render-btn" type="button" style="background:var(--green);color:var(--void)" (click)="renderXor()">▶ RENDER</button>
+            <button id="btnSnapDXor" class="sv-btn snap" type="button" [style.display]="showBtnSnapDXor ? 'inline-flex' : 'none'">◉ SNAP</button>
+            <div id="xorChunkBadge" class="sv-yscale-badge" [style.display]="showXorChunkBadge ? 'inline-flex' : 'none'" style="border-color:rgba(104,211,145,.3);color:var(--green);background:rgba(104,211,145,.08)">0 CHUNKS</div>
+          </div>
+          <div class="sv-canvas-wrap" style="height:260px;background:#030608;border-radius:var(--radius);border:1px solid rgba(104,211,145,0.2);overflow:hidden;">
+            <canvas #digitalXorCanvas style="width:100%;height:auto;display:block;"></canvas>
+          </div>
+          <div id="xorStats" [style.display]="showXorStats ? 'flex' : 'none'" style="margin-top:14px;flex-wrap:wrap;gap:12px;padding:12px 16px;background:var(--panel-raised);border:1px solid var(--border);border-radius:var(--radius)"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.sv-tab-pane ECG -->
+
+  <!-- ══ EEG TAB PANE ══ -->
+  <div class="sv-tab-pane" [class.active]="activeSignalTab === 'eeg'">
+
+    <div class="sv-drop" style="border-color:rgba(183,148,244,.35)"
+         [class.drag-over]="eegIsDragOver" [class.uploading]="eegIsUploading"
+         (click)="onEEGUploadClick(eegFileInput)" (dragover)="onEEGDragOver($event)" (dragleave)="onEEGDragLeave()" (drop)="onEEGDrop($event)">
+      <input #eegFileInput type="file" style="display:none" accept="*" multiple (change)="onEEGFileChange($event)">
+      <div class="sv-drop-icon" style="color:var(--purple)">
+        <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="2,22 6,14 10,28 14,18 18,26 22,10 26,32 30,18 34,26 38,14 42,22"/>
+        </svg>
+      </div>
+      <div class="sv-drop-title" style="color:var(--purple)">Upload EEG Record</div>
+      <div class="sv-drop-desc">Drop a single <strong>.edf</strong> file — or all WFDB files together (<strong>.hea + .dat</strong> + companions)</div>
+      <div class="sv-drop-badge" style="color:var(--purple);border-color:rgba(183,148,244,.4);background:rgba(183,148,244,.08)">.EDF · .HEA + COMPANIONS · BIOT TRANSFORMER · AUTO-AI</div>
+    </div>
+
+    <div class="sv-error" [class.show]="eegShowError">{{ eegErrorMsg }}</div>
+
+    <div class="sv-meta-bar" [class.show]="eegShowMetaBar">
+      <div class="sv-meta-item"><div class="sv-meta-label">Record</div><div class="sv-meta-value">{{ eegMRecord }}</div></div>
+      <div class="sv-meta-sep"></div>
+      <div class="sv-meta-item"><div class="sv-meta-label">Sample Rate</div><div class="sv-meta-value">{{ eegMFs }}</div></div>
+      <div class="sv-meta-sep"></div>
+      <div class="sv-meta-item"><div class="sv-meta-label">Channels</div><div class="sv-meta-value">{{ eegMCh }}</div></div>
+      <div class="sv-meta-sep"></div>
+      <div class="sv-meta-item"><div class="sv-meta-label">Duration</div><div class="sv-meta-value">{{ eegMDur }}</div></div>
+      <div class="sv-meta-sep"></div>
+      <div class="sv-meta-item"><div class="sv-meta-label">Total Samples</div><div class="sv-meta-value">{{ eegMSamples }}</div></div>
+      <div class="sv-meta-sep"></div>
+      <div class="sv-meta-item"><div class="sv-meta-label">Channel Names</div><div class="sv-meta-value">{{ eegMNames }}</div></div>
+    </div>
+
+    <div class="sv-eeg-ai-section" [class.show]="eegShowAI">
+      <div class="sv-ai-section-head">
+        <div class="sv-ai-section-title" style="color:var(--purple)">
+          <div class="sv-ai-section-pip" style="background:var(--purple);box-shadow:0 0 8px var(--purple)"></div>
+          EEG · BIOT TRANSFORMER · AI ANALYSIS
+        </div>
+        <div class="sv-ai-disclaimer">⚠ FOR RESEARCH USE ONLY — NOT A DIAGNOSTIC DEVICE</div>
+      </div>
+      <div class="sv-eeg-ai-card">
+        <div *ngIf="!eegAIResult" class="sv-ai-skeleton">
+          <div class="sv-ai-skel-line" style="height:20px;width:60%"></div>
+          <div class="sv-ai-skel-line" style="height:10px;width:35%"></div>
+          <div class="sv-ai-skel-line" style="height:6px;width:100%"></div>
+          <div class="sv-ai-skel-line" style="height:60px;width:100%"></div>
+        </div>
+        <div *ngIf="eegAIResult">
+          <div class="sv-ai-primary-label" [style.color]="eegAIResult.color">{{ eegAIResult.label }}</div>
+          <div class="sv-ai-primary-sub" style="margin-top:4px">{{ eegAIResult.sub }}</div>
+          <div class="sv-ai-description" [style.border-color]="eegAIResult.color" [style.background]="eegAIResult.color+'12'" style="margin-top:12px">{{ eegAIResult.description }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="eegShowPlotModeChoice">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip" style="background:var(--purple);box-shadow:0 0 8px var(--purple)"></div>SELECT DISPLAY MODE</div><div class="sv-tag">CONFIGURATION</div></div>
+        <div class="sv-card-body">
+          <div class="sv-mode-grid">
+            <button class="sv-mode-btn" type="button" (click)="eegActivateSeparate()"><span class="sv-mode-icon">⊟</span><div class="sv-mode-title" style="color:var(--purple)">SEPARATE WINDOWS</div><div class="sv-mode-desc">Each channel in its own viewport with independent Y-scale and playback</div></button>
+            <button class="sv-mode-btn" type="button" (click)="eegActivateSingle()"><span class="sv-mode-icon">⊞</span><div class="sv-mode-title" style="color:var(--purple)">SINGLE WINDOW</div><div class="sv-mode-desc">All channels overlaid with per-channel mini sub-axes</div></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="eegShowChannelCustomSection">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip" style="background:var(--purple);box-shadow:0 0 8px var(--purple)"></div>CHANNEL CUSTOMIZATION</div><div class="sv-tag">STYLE</div></div>
+        <div class="sv-card-body" #eegChannelCustomBody style="display:flex;flex-wrap:wrap;gap:16px;padding:16px 20px"></div>
+      </div>
+    </div>
+
+    <div *ngIf="eegShowGlobalConfigBar">
+      <div class="sv-channel" style="animation:none">
+        <div class="sv-channel-head">
+          <div class="sv-channel-meta"><div style="width:9px;height:9px;border-radius:50%;background:var(--purple);box-shadow:0 0 8px var(--purple);flex-shrink:0"></div><div style="font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--purple)">ALL CHANNELS</div></div>
+          <div class="sv-toolbar">
+            <button class="sv-btn play" type="button" (click)="eegGBtnPlay()">▶ PLAY ALL</button>
+            <button class="sv-btn pause" type="button" (click)="eegGBtnPause()">⏸ PAUSE ALL</button>
+            <div style="width:1px;height:18px;background:var(--border);margin:0 2px"></div>
+            <button class="sv-btn yzoom" type="button" (click)="eegGBtnAmpIn()">↕ AMP+</button>
+            <button class="sv-btn yzoom" type="button" (click)="eegGBtnAmpOut()">↕ AMP−</button>
+            <button class="sv-btn" type="button" (click)="eegGBtnReset()">↺ RESET</button>
+            <div class="sv-yscale-badge">{{ eegGAmpBadge }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div #eegChannelsContainer></div>
+
+    <div *ngIf="eegShowPeriodSection">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>WINDOW WIDTH</div><div class="sv-tag">TEMPORAL</div></div>
+        <div class="sv-card-body">
+          <p class="sv-section-desc">Controls how many samples are visible. Drag or scroll the canvas to pan.</p>
+          <div class="sv-controls-row">
+            <span class="sv-ctrl-label">WINDOW</span>
+            <input type="range" min="10" max="10000" [value]="eegPeriodValue" (input)="onEEGPeriodChange($event)">
+            <input type="number" [value]="eegWindowInput" min="10" step="10" style="width:80px;padding:4px 8px;font-family:var(--font-mono);font-size:12px;color:var(--cyan);background:var(--panel-raised);border:1px solid var(--border-accent);border-radius:var(--radius);outline:none;text-align:center;-moz-appearance:textfield;" (input)="onEEGWindowInputChange($event)" (blur)="onEEGWindowInputBlur($event)">
+            <div class="sv-ctrl-value"><span style="font-size:9px;color:var(--text-2);font-family:var(--font-mono)">SAMPLES</span></div>
+          </div>
+          <div class="sv-controls-row" style="margin-top:14px">
+            <span class="sv-ctrl-label">SPEED</span>
+            <input type="range" min="-20" max="20" step="0.5" [value]="eegSpeedSlider" style="flex:1;min-width:180px;max-width:480px" (input)="onEEGSpeedChange($event)">
+            <input type="number" [value]="eegSpeedInput" step="0.5" style="width:72px;padding:4px 8px;font-family:var(--font-mono);font-size:12px;color:var(--cyan);background:var(--panel-raised);border:1px solid var(--border-accent);border-radius:var(--radius);outline:none;text-align:center;-moz-appearance:textfield;" (input)="onEEGSpeedInputChange($event)" (blur)="onEEGSpeedInputBlur($event)">
+            <span style="font-size:9px;color:var(--text-2);font-family:var(--font-mono)">×</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="eegShowRecurrenceSection">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>CHANNEL CROSS-ANALYSIS</div><div class="sv-tag">SCATTER</div></div>
+        <div class="sv-card-body">
+          <p class="sv-section-desc">Plot two channels against each other — reveals correlation and phase-space relationships</p>
+          <div class="sv-plot-controls">
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">X-AXIS</span><select id="eegRCh1"></select></div>
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">Y-AXIS</span><select id="eegRCh2"></select></div>
+            <button class="sv-render-btn" type="button" (click)="eegRenderRecurrence()">▶ RENDER</button>
+            <button id="eegBtnSnapR" class="sv-btn snap" type="button" style="display:none">◉ SNAP</button>
+            <button id="eegBtnResetR" class="sv-btn" type="button" style="display:none">↺ RESET VIEW</button>
+            <div id="eegScatterZoomBadge" class="sv-yscale-badge" style="display:none">ZOOM ×1.00</div>
+          </div>
+          <div class="sv-canvas-wrap" style="height:520px;background:#040810;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;">
+            <canvas #eegRecurrenceCanvas style="width:100%;height:100%;background:#040810;cursor:crosshair;display:block;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="eegShowPolarSection">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>POLAR VISUALIZATION</div><div class="sv-tag">PHASE SPACE</div></div>
+        <div class="sv-card-body">
+          <p class="sv-section-desc">Single channel in polar coordinates: r = amplitude, θ = time</p>
+          <div class="sv-plot-controls">
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">CHANNEL</span><select id="eegPCh"></select></div>
+            <button class="sv-render-btn" type="button" (click)="eegRenderPolar()">▶ RENDER</button>
+            <button id="eegBtnSnapP" class="sv-btn snap" type="button" style="display:none">◉ SNAP</button>
+            <button id="eegBtnResetP" class="sv-btn" type="button" style="display:none">↺ RESET VIEW</button>
+            <div id="eegPolarZoomBadge" class="sv-yscale-badge" style="display:none">ZOOM ×1.00</div>
+          </div>
+          <div class="sv-canvas-wrap" style="height:520px;background:#040810;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;">
+            <canvas #eegPolarCanvas style="width:100%;height:100%;background:#040810;cursor:crosshair;display:block;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="eegShowPolar2Section">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>POLAR RATIO</div><div class="sv-tag">DUAL-CHANNEL</div></div>
+        <div class="sv-card-body">
+          <p class="sv-section-desc">Two channels in polar space: r = |Ch A| / |Ch B|, θ = time</p>
+          <div class="sv-plot-controls">
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">NUMERATOR</span><select id="eegP2Ch1"></select></div>
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">DENOMINATOR</span><select id="eegP2Ch2"></select></div>
+            <button class="sv-render-btn" type="button" (click)="eegRenderPolar2()">▶ RENDER</button>
+            <button id="eegBtnSnapP2" class="sv-btn snap" type="button" style="display:none">◉ SNAP</button>
+            <button id="eegBtnResetP2" class="sv-btn" type="button" style="display:none">↺ RESET VIEW</button>
+            <div id="eegPolar2ZoomBadge" class="sv-yscale-badge" style="display:none">ZOOM ×1.00</div>
+          </div>
+          <div class="sv-canvas-wrap" style="height:520px;background:#040810;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;">
+            <canvas #eegPolar2Canvas style="width:100%;height:100%;background:#040810;cursor:crosshair;display:block;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="eegShowXorSection">
+      <div class="sv-card">
+        <div class="sv-card-head"><div class="sv-card-label"><div class="sv-card-label-pip"></div>XOR STACK GRAPH</div><div class="sv-tag">ANOMALY DETECTOR</div></div>
+        <div class="sv-card-body">
+          <p class="sv-section-desc">Signal divided into chunks equal to window width. Standard deviation across chunks reveals anomalies.</p>
+          <div class="sv-plot-controls">
+            <div class="sv-ctrl-group"><span class="sv-ctrl-label">CHANNEL</span><select id="eegXorCh"></select></div>
+            <div class="sv-ctrl-group">
+              <span class="sv-ctrl-label">SENSITIVITY</span>
+              <input type="range" min="1" max="50" value="8" style="width:100px;min-width:0" (input)="onEEGXorThreshChange($event)">
+              <span style="font-family:var(--font-mono);font-size:10px;color:var(--green);min-width:28px">{{ eegXorThreshVal }}</span>
+            </div>
+            <button class="sv-render-btn" type="button" style="background:var(--green);color:var(--void)" (click)="eegRenderXor()">▶ RENDER</button>
+            <button id="eegBtnSnapDXor" class="sv-btn snap" type="button" style="display:none">◉ SNAP</button>
+            <div id="eegXorChunkBadge" class="sv-yscale-badge" style="display:none;border-color:rgba(104,211,145,.3);color:var(--green);background:rgba(104,211,145,.08)">0 CHUNKS</div>
+          </div>
+          <div class="sv-canvas-wrap" style="height:260px;background:#030608;border-radius:var(--radius);border:1px solid rgba(104,211,245,0.2);overflow:hidden;">
+            <canvas #eegDigitalXorCanvas style="width:100%;height:auto;display:block;"></canvas>
+          </div>
+          <div id="eegXorStats" style="display:none;margin-top:14px;flex-wrap:wrap;gap:12px;padding:12px 16px;background:var(--panel-raised);border:1px solid var(--border);border-radius:var(--radius)"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.sv-tab-pane EEG -->
+
+</main>

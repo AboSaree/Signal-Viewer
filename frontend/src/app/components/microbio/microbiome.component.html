@@ -1,0 +1,297 @@
+<div class="micro-page">
+
+  <!-- ════════════════════ STEP 1: UPLOAD ════════════════════ -->
+  <section *ngIf="!uploadDone" class="upload-section">
+    <div class="hero">
+      <div class="hero-glow"></div>
+      <h1 class="hero-title">
+        <span class="material-icons hero-icon">biotech</span>
+        Microbiome Signals
+      </h1>
+      <p class="hero-sub">
+        Upload your iHMP / iPOP microbiome dataset to visualize bacterial diversity,
+        taxonomic composition, and generate patient risk profiles.
+        <br><strong>100% client-side — no server required.</strong>
+      </p>
+    </div>
+
+    <div class="upload-cards">
+      <!-- Metadata -->
+      <div class="upload-card" [class.done]="metadataFile">
+        <div class="upload-card-inner">
+          <div class="upload-ico" [class.ok]="metadataFile">
+            <span class="material-icons">{{ metadataFile ? 'check_circle' : 'description' }}</span>
+          </div>
+          <h3>Metadata CSV</h3>
+          <p class="upload-hint">Sample IDs, participant info, diagnosis (CD / UC / nonIBD), week number</p>
+          <div *ngIf="metadataFile" class="file-pill">
+            <span class="material-icons">insert_drive_file</span>
+            {{ metadataFile.name }}
+            <span class="file-size">({{ (metadataFile.size / 1024).toFixed(1) }} KB)</span>
+          </div>
+          <label class="btn btn-primary" *ngIf="!metadataFile">
+            <span class="material-icons">upload_file</span> Choose File
+            <input type="file" accept=".csv,.tsv,.txt" (change)="onMetadataFileSelected($event)" hidden>
+          </label>
+        </div>
+      </div>
+
+      <!-- Taxonomy -->
+      <div class="upload-card" [class.done]="taxonomyFile">
+        <div class="upload-card-inner">
+          <div class="upload-ico" [class.ok]="taxonomyFile">
+            <span class="material-icons">{{ taxonomyFile ? 'check_circle' : 'table_chart' }}</span>
+          </div>
+          <h3>Taxonomy CSV</h3>
+          <p class="upload-hint">Sample IDs and bacterial taxon abundances (OTU / ASV table)</p>
+          <div *ngIf="taxonomyFile" class="file-pill">
+            <span class="material-icons">insert_drive_file</span>
+            {{ taxonomyFile.name }}
+            <span class="file-size">({{ (taxonomyFile.size / 1024).toFixed(1) }} KB)</span>
+          </div>
+          <label class="btn btn-primary" *ngIf="!taxonomyFile">
+            <span class="material-icons">upload_file</span> Choose File
+            <input type="file" accept=".csv,.tsv,.txt" (change)="onTaxonomyFileSelected($event)" hidden>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Process button -->
+    <div class="upload-action">
+      <button class="btn btn-accent btn-lg"
+              [disabled]="!metadataFile || !taxonomyFile || processing"
+              (click)="processDataset()">
+        <span class="material-icons">{{ processing ? 'hourglass_top' : 'play_arrow' }}</span>
+        {{ processing ? 'Processing…' : 'Analyze Dataset' }}
+      </button>
+    </div>
+
+    <!-- Processing spinner -->
+    <div *ngIf="processing" class="processing-info">
+      <div class="spinner"></div>
+      <span>Parsing CSVs and computing microbiome profiles…</span>
+    </div>
+
+    <div *ngIf="uploadError" class="banner banner-error">
+      <span class="material-icons">error</span> {{ uploadError }}
+    </div>
+
+    <!-- Format reference -->
+    <div class="format-section">
+      <h3>Expected CSV Formats</h3>
+      <div class="format-cards">
+        <div class="format-card">
+          <h4><span class="material-icons">description</span> Metadata CSV</h4>
+          <pre>External ID,Participant ID,diagnosis,week_num
+CSM67UH6,C3001,CD,0
+CSM79HHM,C3001,CD,4
+HSM6XRS2,H4008,nonIBD,0</pre>
+        </div>
+        <div class="format-card">
+          <h4><span class="material-icons">table_chart</span> Taxonomy CSV</h4>
+          <pre>sample_id,Bacteroides,Faecalibacterium,...
+CSM67UH6,0.25,0.08,...
+CSM79HHM,0.30,0.12,...
+HSM6XRS2,0.20,0.15,...</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════ STEP 2: QUERY ════════════════════ -->
+  <section *ngIf="uploadDone && !result" class="query-section">
+    <div class="query-header">
+      <h2><span class="material-icons">people</span> Select Participant</h2>
+      <button class="btn btn-secondary btn-sm" (click)="resetUpload()">
+        <span class="material-icons">restart_alt</span> New Dataset
+      </button>
+    </div>
+
+    <!-- Cohort summary -->
+    <div class="cohort-summary">
+      <div class="cohort-chip cd"><span class="cohort-dot"></span> CD: {{ cdCount }}</div>
+      <div class="cohort-chip uc"><span class="cohort-dot"></span> UC: {{ ucCount }}</div>
+      <div class="cohort-chip nonibd"><span class="cohort-dot"></span> nonIBD: {{ nonIBDCount }}</div>
+      <div class="cohort-chip total">Total: {{ participants.length }}</div>
+    </div>
+
+    <!-- Participant selector -->
+    <div class="query-form">
+      <label class="query-label">Participant</label>
+      <select class="query-select" [(ngModel)]="participantIndex">
+        <option [ngValue]="null" disabled>— choose —</option>
+        <option *ngFor="let p of participants; let i = index" [ngValue]="i">
+          {{ p.id }}  ({{ p.diagnosis }})
+        </option>
+      </select>
+      <button class="btn btn-primary"
+              [disabled]="participantIndex === null"
+              (click)="selectParticipant()">
+        <span class="material-icons">search</span> Analyze
+      </button>
+    </div>
+  </section>
+
+  <!-- ════════════════════ STEP 3: RESULTS ════════════════════ -->
+  <section *ngIf="result" class="results-section">
+
+    <!-- Top bar -->
+    <div class="results-topbar">
+      <div class="results-topbar-left">
+        <h2>
+          <span class="material-icons">person</span>
+          {{ result.participant_id }}
+          <span class="badge"
+                [ngClass]="{
+                  'badge-cd': result.diagnosis === 'CD',
+                  'badge-uc': result.diagnosis === 'UC',
+                  'badge-nonibd': result.diagnosis === 'nonIBD'
+                }">
+            {{ result.diagnosis }}
+          </span>
+        </h2>
+      </div>
+      <div class="results-topbar-right">
+        <button class="btn btn-secondary btn-sm" (click)="resetToQuery()">
+          <span class="material-icons">arrow_back</span> Back
+        </button>
+        <button class="btn btn-secondary btn-sm" (click)="resetUpload()">
+          <span class="material-icons">restart_alt</span> New Dataset
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="kpi-row">
+      <div class="kpi-card" [ngClass]="getDICardClass(result.Average_Dysbiosis_Index)">
+        <div class="kpi-icon"><span class="material-icons">analytics</span></div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ result.Average_Dysbiosis_Index.toFixed(2) }}</span>
+          <span class="kpi-label">{{ getDILabel(result.Average_Dysbiosis_Index) }}</span>
+        </div>
+      </div>
+      <div class="kpi-card kpi-card--good">
+        <div class="kpi-icon"><span class="material-icons">eco</span></div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ result.Good_Bacteria.length }}</span>
+          <span class="kpi-label">Good Bacteria</span>
+        </div>
+      </div>
+      <div class="kpi-card kpi-card--bad">
+        <div class="kpi-icon"><span class="material-icons">bug_report</span></div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ result.Bad_Bacteria.length }}</span>
+          <span class="kpi-label">Bad Bacteria</span>
+        </div>
+      </div>
+      <div class="kpi-card kpi-card--weeks">
+        <div class="kpi-icon"><span class="material-icons">calendar_month</span></div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ result.Dysbiosis_Index.length }}</span>
+          <span class="kpi-label">Sample Weeks</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab nav -->
+    <div class="tab-nav">
+      <button class="tab-btn" [class.active]="activeTab==='signals'" (click)="setTab('signals')">
+        <span class="material-icons">show_chart</span> Signal Plots
+      </button>
+      <button class="tab-btn" [class.active]="activeTab==='barplot'" (click)="setTab('barplot')">
+        <span class="material-icons">bar_chart</span> Taxonomic Barplot
+      </button>
+      <button class="tab-btn" [class.active]="activeTab==='heatmap'" (click)="setTab('heatmap')">
+        <span class="material-icons">grid_on</span> Diversity Heatmap
+      </button>
+      <button class="tab-btn" [class.active]="activeTab==='profile'" (click)="setTab('profile')">
+        <span class="material-icons">person_search</span> Patient Profile
+      </button>
+    </div>
+
+    <!-- TAB: Signals -->
+    <div *ngIf="activeTab==='signals'" class="tab-panel">
+      <div class="card" *ngIf="dysbiosisConfig">
+        <h3 class="card-title">
+          <span class="material-icons">show_chart</span> Dysbiosis Index Signal
+        </h3>
+        <p class="card-desc">Dysbiosis index over sample weeks — higher values indicate greater microbial imbalance.</p>
+        <app-signal-graph [config]="dysbiosisConfig" [height]="320"></app-signal-graph>
+      </div>
+
+      <div class="card" *ngIf="goodBacteriaConfig && goodBacteriaConfig.signals.length">
+        <h3 class="card-title">
+          <span class="material-icons" style="color:#66bb6a">eco</span> Good Bacteria Signals
+        </h3>
+        <p class="card-desc">Beneficial bacterial abundances tracked over time. Toggle channels to compare.</p>
+        <app-signal-graph [config]="goodBacteriaConfig" [height]="360"></app-signal-graph>
+      </div>
+
+      <div class="card" *ngIf="badBacteriaConfig && badBacteriaConfig.signals.length">
+        <h3 class="card-title">
+          <span class="material-icons" style="color:#ef5350">bug_report</span> Bad Bacteria Signals
+        </h3>
+        <p class="card-desc">Pathogenic bacterial abundances tracked over time.</p>
+        <app-signal-graph [config]="badBacteriaConfig" [height]="360"></app-signal-graph>
+      </div>
+
+      <!-- Quick bacteria bars -->
+      <div class="card">
+        <h3 class="card-title"><span class="material-icons">leaderboard</span> Bacteria Overview (Latest Values)</h3>
+        <div class="bacteria-cols">
+          <div class="bact-col">
+            <h4 class="bact-col-title good"><span class="material-icons">eco</span> Beneficial</h4>
+            <div class="bact-row" *ngFor="let b of result.Good_Bacteria">
+              <span class="bact-name">{{ b.name }}</span>
+              <div class="bact-bar-track">
+                <div class="bact-bar good" [style.width.%]="getBacteriaBarWidth(latestVal(b.data), 'good')"></div>
+              </div>
+              <span class="bact-val">{{ latestVal(b.data).toFixed(4) }}</span>
+            </div>
+          </div>
+          <div class="bact-col">
+            <h4 class="bact-col-title bad"><span class="material-icons">bug_report</span> Pathogenic</h4>
+            <div class="bact-row" *ngFor="let b of result.Bad_Bacteria">
+              <span class="bact-name">{{ b.name }}</span>
+              <div class="bact-bar-track">
+                <div class="bact-bar bad" [style.width.%]="getBacteriaBarWidth(latestVal(b.data), 'bad')"></div>
+              </div>
+              <span class="bact-val">{{ latestVal(b.data).toFixed(4) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Barplot -->
+    <div *ngIf="activeTab==='barplot'" class="tab-panel">
+      <div class="card">
+        <h3 class="card-title"><span class="material-icons">bar_chart</span> Taxonomic Composition</h3>
+        <p class="card-desc">Stacked bars showing relative bacterial abundances. Switch between selected participant and all.</p>
+        <app-taxonomic-barplot
+          [singleResult]="result"
+          [allResults]="allResults"
+          [height]="440">
+        </app-taxonomic-barplot>
+      </div>
+    </div>
+
+    <!-- TAB: Heatmap -->
+    <div *ngIf="activeTab==='heatmap'" class="tab-panel">
+      <div class="card">
+        <h3 class="card-title"><span class="material-icons">grid_on</span> Diversity Heatmap</h3>
+        <p class="card-desc">
+          Bacterial abundance grid across all participants. Rows grouped by diagnosis (CD / UC / nonIBD).
+          Filter by cohort to identify differential patterns.
+        </p>
+        <app-diversity-heatmap [results]="allResults"></app-diversity-heatmap>
+      </div>
+    </div>
+
+    <!-- TAB: Profile -->
+    <div *ngIf="activeTab==='profile'" class="tab-panel">
+      <app-patient-profile [result]="result"></app-patient-profile>
+    </div>
+  </section>
+</div>

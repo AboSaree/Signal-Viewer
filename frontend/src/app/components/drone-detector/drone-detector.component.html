@@ -1,0 +1,104 @@
+<main class="dd-main">
+
+  <!-- ── Page Header ── -->
+  <div class="dd-page-header">
+    <div class="dd-page-title">
+      <div class="dd-page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M6.3 6.3a7 7 0 0 0 0 11.4M17.7 6.3a7 7 0 0 1 0 11.4"/>
+          <path d="M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17"/>
+        </svg>
+      </div>
+      <div>
+        <div class="dd-page-name">DRONE DETECTOR</div>
+        <div class="dd-page-sub">Audio Classification · RF Acoustic Analysis</div>
+      </div>
+    </div>
+    <div class="dd-page-tag">⬡ ML MODEL</div>
+  </div>
+
+  <!-- ── Upload Drop Zone ── -->
+  <div
+    class="dd-drop"
+    [class.drag-over]="isDragOver"
+    (click)="onZoneClick(fileInput)"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave()"
+    (drop)="onDrop($event)"
+  >
+    <input #fileInput type="file" accept="audio/*" (change)="onFileChange($event)">
+    <div class="dd-drop-icon">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="6" y="8" width="36" height="32" rx="3"/>
+        <path d="M24 32V20M17 26l7-6 7 6"/>
+        <path d="M14 40h20"/>
+      </svg>
+    </div>
+    <div class="dd-drop-title">Upload Audio Recording</div>
+    <div class="dd-drop-desc">Drag &amp; drop or click to select an audio file for drone classification</div>
+    <div class="dd-drop-badge">.WAV · .MP3 · .OGG · .FLAC · ANY AUDIO FORMAT</div>
+  </div>
+
+  <!-- ── File Info Bar ── -->
+  <div class="dd-file-bar" [class.show]="showPlayer">
+    <div class="dd-file-dot"></div>
+    <div class="dd-file-name">{{ fileName }}</div>
+    <div class="dd-file-tag">LOADED</div>
+  </div>
+
+  <!-- ── Audio Player ── -->
+  <div class="dd-player-wrap" [class.show]="showPlayer">
+    <div class="dd-player-label">Audio Preview</div>
+    <audio class="dd-audio-player" [src]="audioSrc" controls></audio>
+  </div>
+
+  <!-- ── Analyze Button ── -->
+  <button
+    class="dd-btn-analyze"
+    (click)="uploadAudio()"
+    [disabled]="isAnalyzeDisabled"
+  >
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <polygon points="3,1 13,7 3,13"/>
+    </svg>
+    ANALYZE SOUND
+  </button>
+
+  <!-- ── Progress Bar ── -->
+  <div class="dd-progress-wrap" [class.show]="showProgress">
+    <div class="dd-progress-header">
+      <span class="dd-progress-label">Processing</span>
+      <span class="dd-progress-pct">{{ progress | number:'1.0-0' }}%</span>
+    </div>
+    <div class="dd-progress-bar">
+      <div class="dd-progress-fill" [style.width.%]="progress"></div>
+    </div>
+  </div>
+
+  <!-- ── Status Message ── -->
+  <div class="dd-status" [class.show]="showStatus" [ngClass]="statusType">
+    <div class="dd-status-dot"></div>
+    {{ status }}
+  </div>
+
+  <!-- ── Classification Result ── -->
+  <div class="dd-result" [class.show]="showResult" [ngClass]="resultClass">
+    <div class="dd-result-head">
+      <div class="dd-result-label">
+        <div class="dd-result-pip"></div>
+        Classification Result
+      </div>
+      <div class="dd-result-tag">ACOUSTIC ANALYSIS</div>
+    </div>
+    <div class="dd-result-body">
+      <div class="dd-result-icon">{{ resultIcon }}</div>
+      <div class="dd-result-info">
+        <div class="dd-result-value">{{ resultLabel }}</div>
+        <div class="dd-result-sub">{{ resultSub }}</div>
+      </div>
+    </div>
+    <div class="dd-result-disclaimer">⚠ FOR RESEARCH &amp; MONITORING USE ONLY — NOT A CERTIFIED SECURITY SYSTEM</div>
+  </div>
+
+</main>

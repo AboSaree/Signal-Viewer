@@ -1,0 +1,125 @@
+<div class="upload-container">
+  <div class="upload-header">
+    <h1>
+      <span class="logo-icon">📊</span>
+      Market Signal Visualizer
+    </h1>
+    <p class="subtitle">
+      Upload a CSV file with multiple signals to visualize and analyze market data
+    </p>
+  </div>
+
+  <!-- Category Selector -->
+  <div class="category-selector">
+    <h3>Select Signal Category</h3>
+    <div class="category-buttons">
+      <button *ngFor="let cat of categories" [class.active]="selectedCategory === cat.value"
+        (click)="selectedCategory = cat.value" class="category-btn">
+        <span class="cat-icon">{{ cat.icon }}</span>
+        <div class="cat-text">
+          <span class="cat-label">{{ cat.label }}</span>
+          <span class="cat-desc">{{ cat.description }}</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Dynamic Format Info based on category -->
+  <div class="format-info">
+    <h3>📋 Expected CSV Format — {{ selectedCategory | titlecase }}</h3>
+    <p class="format-category-hint">
+      Example signals: <strong>{{ getCurrentHint().nameExample }}</strong>
+    </p>
+    <div class="format-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Open</th>
+            <th>Close</th>
+            <th>High</th>
+            <th>Low</th>
+            <th>Volume</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of getCurrentSampleRows(); let i = index"
+            [class.different-company]="i > 0 && getCurrentSampleRows()[i].name !== getCurrentSampleRows()[i-1].name">
+            <td class="name-cell">{{ row.name }}</td>
+            <td>{{ row.date }}</td>
+            <td>{{ row.open }}</td>
+            <td>{{ row.close }}</td>
+            <td>{{ row.high }}</td>
+            <td>{{ row.low }}</td>
+            <td>{{ row.vol }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="format-note">
+      💡 Rows for each {{ selectedCategory === 'stock' ? 'company' : selectedCategory === 'currency' ? 'currency pair' :
+      'commodity' }}
+      should be grouped together and sorted by date.
+      The file can contain any number of
+      {{ selectedCategory === 'stock' ? 'companies' : selectedCategory === 'currency' ? 'currency pairs' : 'commodities'
+      }}
+      with different row counts.
+    </p>
+  </div>
+
+  <!-- Drag & Drop Zone -->
+  <div class="drop-zone" [class.dragging]="isDragging" [class.loading]="isLoading" (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+    <div class="drop-content" *ngIf="!isLoading">
+      <div class="drop-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+      </div>
+      <h3>Drag & Drop your {{ selectedCategory === 'stock' ? 'stock market' : selectedCategory === 'currency' ? 'forex'
+        : 'commodity' }} CSV file here</h3>
+      <p>
+        {{ selectedCategory === 'stock' ? 'Upload stock data with multiple companies' :
+        selectedCategory === 'currency' ? 'Upload forex data with multiple currency pairs' :
+        'Upload commodity data with multiple minerals and raw materials' }}
+      </p>
+      <div class="divider">
+        <span>or</span>
+      </div>
+      <label class="file-btn">
+        Browse Files
+        <input type="file" accept=".csv,.txt" (change)="onFileSelected($event)" hidden>
+      </label>
+    </div>
+
+    <div class="loading-content" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Processing {{ fileName }}...</p>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="errorMessage">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="15" y1="9" x2="9" y2="15" />
+      <line x1="9" y1="9" x2="15" y2="15" />
+    </svg>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Sample Data Button -->
+  <div class="sample-section">
+    <h3>Or try with sample data</h3>
+    <button class="sample-btn-main" (click)="loadSampleData()">
+      <span class="sample-icon">🎲</span>
+      <div class="sample-text">
+        <span class="sample-title">Load 5 Sample Companies</span>
+        <span class="sample-desc">AAPL, GOOGL, MSFT, AMZN, TSLA — randomly generated stock data</span>
+      </div>
+    </button>
+  </div>
+</div>

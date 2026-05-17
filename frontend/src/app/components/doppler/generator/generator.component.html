@@ -1,0 +1,96 @@
+<div class="sv-card">
+  <div class="sv-card-head">
+    <div class="sv-card-label">
+      <div class="sv-card-label-pip" style="background:var(--amber);box-shadow:0 0 8px var(--amber)"></div>
+      DOPPLER SYNTHESIZER
+    </div>
+    <div class="sv-tag">PART I · GENERATOR</div>
+  </div>
+  <div class="sv-card-body">
+
+    <p class="sv-section-desc">
+      f<sub>obs</sub> = f<sub>0</sub> &times; (v<sub>sound</sub> &plusmn; v<sub>observer</sub>) / (v<sub>sound</sub> &mnplus; v<sub>source</sub>)
+    </p>
+
+    <div class="dp-grid">
+
+      <!-- Controls panel -->
+      <div class="dp-panel">
+        <div class="dp-panel-head">
+          <div class="sv-card-label" style="color:var(--amber)">
+            <div class="sv-card-label-pip" style="background:var(--amber);box-shadow:0 0 8px var(--amber)"></div>
+            PARAMETERS
+          </div>
+          <div class="sv-tag">CONFIG</div>
+        </div>
+        <div class="dp-panel-body">
+
+          <div class="dp-field">
+            <div class="dp-field-label">Base Frequency <span class="dp-field-val amber">{{ freqLabel }}</span></div>
+            <input type="range" class="amber-thumb" min="100" max="2000" step="10" [(ngModel)]="frequency">
+            <div class="dp-range-labels"><span>100 Hz</span><span>2000 Hz</span></div>
+          </div>
+
+          <div class="dp-field">
+            <div class="dp-field-label">Source Velocity <span class="dp-field-val amber">{{ velLabel }}</span></div>
+            <input type="range" class="amber-thumb" min="5" max="300" step="5" [(ngModel)]="velocity">
+            <div class="dp-range-labels"><span>5 m/s</span><span>300 m/s</span></div>
+          </div>
+
+          <div class="dp-field">
+            <div class="dp-field-label">Duration <span class="dp-field-val amber">{{ durLabel }}</span></div>
+            <input type="range" class="amber-thumb" min="1" max="10" step="0.5" [(ngModel)]="duration">
+            <div class="dp-range-labels"><span>1 s</span><span>10 s</span></div>
+          </div>
+
+          <div class="dp-field">
+            <div class="dp-field-label">Waveform Type <span class="dp-field-val amber">SHAPE</span></div>
+            <select [(ngModel)]="waveform">
+              <option value="sine">Sine</option>
+              <option value="sawtooth">Sawtooth</option>
+              <option value="square">Square</option>
+              <option value="triangle">Triangle</option>
+            </select>
+          </div>
+
+          <div class="dp-field">
+            <div class="dp-field-label">Speed of Sound <span class="dp-field-val amber">{{ sndLabel }}</span></div>
+            <input type="range" class="amber-thumb" min="200" max="600" step="1" [(ngModel)]="soundSpeed">
+            <div class="dp-range-labels"><span>200 m/s</span><span>600 m/s</span></div>
+          </div>
+
+          <div class="dp-divider"></div>
+
+          <button class="sv-render-btn amber" style="width:100%;justify-content:center"
+                  (click)="generate()" [disabled]="generating">
+            ▶ Generate Wave
+          </button>
+          <div class="dp-btn-row">
+            <button class="sv-render-btn green" style="flex:1;justify-content:center"
+                    (click)="play()" [disabled]="!canPlay || generating">↺ Play</button>
+            <button class="sv-render-btn" style="flex:1;justify-content:center;background:var(--panel-raised);color:var(--cyan);border:1px solid var(--border-accent)"
+                    (click)="download()" [disabled]="!canDownload">↓ WAV</button>
+          </div>
+
+          <div class="dp-progress-wrap">
+            <div class="dp-progress-fill amber" [style.width.%]="progress"></div>
+          </div>
+          <div class="dp-status" [ngClass]="statusClass">{{ statusMsg }}</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="dp-viz-panel">
+        <div class="dp-chart-wrap">
+          <div class="dp-chart-head">
+            <div class="dp-chart-label" style="color:var(--amber)">// WAVEFORM — TIME DOMAIN</div>
+          </div>
+          <div class="dp-chart-body">
+            <canvas #waveCanvas height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

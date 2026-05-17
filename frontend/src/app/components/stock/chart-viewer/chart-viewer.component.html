@@ -1,0 +1,48 @@
+<!-- src/app/components/chart-viewer/chart-viewer.component.html -->
+
+<div class="chart-wrapper">
+  <div class="main-chart-area">
+    <div #chartContainer class="chart-container"></div>
+
+    <!-- Forecast Loading Overlay -->
+    <div class="forecast-overlay" *ngIf="forecastStatus === 'loading'">
+      <div class="forecast-loader">
+        <div class="forecast-spinner"></div>
+        <span>Running LSTM Prediction Model...</span>
+      </div>
+    </div>
+
+    <!-- Forecast Info Badge -->
+    <div class="forecast-badge" *ngIf="forecastStatus === 'success' && forecastData">
+      <div class="badge-dot"></div>
+      <span class="badge-label">LSTM Forecast</span>
+      <span class="badge-source" [class.hf]="forecastData.modelSource === 'huggingface'">
+        {{ forecastData.modelSource === 'huggingface' ? 'HuggingFace' : 'Local Model' }}
+      </span>
+      <span class="badge-confidence">
+        {{ (forecastData.confidence * 100) | number:'1.0-0' }}% confidence
+      </span>
+      <span class="badge-days">{{ config.forecastDays }} days</span>
+    </div>
+
+    <!-- Forecast Error Badge -->
+    <div class="forecast-badge error" *ngIf="forecastStatus === 'error'">
+      <span class="badge-label">⚠️ Forecast failed</span>
+    </div>
+
+    <!-- Forecast Warning (local fallback) -->
+    <div class="forecast-warning" *ngIf="forecastData?.error && forecastStatus === 'success'">
+      <span>⚠️ {{ forecastData?.error }}</span>
+    </div>
+  </div>
+
+  <div class="rsi-area" *ngIf="config.showRSI">
+    <div class="rsi-header">
+      <span class="rsi-label">RSI 14</span>
+      <span class="rsi-value" *ngIf="rsiData.length > 0">
+        {{ rsiData[rsiData.length - 1].value | number:'1.2-2' }}
+      </span>
+    </div>
+    <div #rsiContainer class="rsi-container"></div>
+  </div>
+</div>

@@ -1,0 +1,44 @@
+{
+  "backbone": "Edoardo-BS/hubert-ecg-base",
+  "hidden_size": 768,
+  "num_classes": 5,
+  "class_names": [
+    "NORM",
+    "MI",
+    "STTC",
+    "CD",
+    "HYP"
+  ],
+  "class_map": {
+    "0": {
+      "name": "NORM",
+      "full": "Normal Sinus Rhythm",
+      "emoji": "\u2705"
+    },
+    "1": {
+      "name": "MI",
+      "full": "Myocardial Infarction",
+      "emoji": "\ud83d\udd34"
+    },
+    "2": {
+      "name": "STTC",
+      "full": "ST/T Change",
+      "emoji": "\ud83d\udfe0"
+    },
+    "3": {
+      "name": "CD",
+      "full": "Conduction Disturbance",
+      "emoji": "\ud83d\udfe1"
+    },
+    "4": {
+      "name": "HYP",
+      "full": "Hypertrophy",
+      "emoji": "\ud83d\udfe3"
+    }
+  },
+  "target_len": 1000,
+  "target_fs": 100,
+  "n_leads": 12,
+  "threshold": 0.5,
+  "best_auc": 0.879
+}

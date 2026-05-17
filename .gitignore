@@ -1,0 +1,165 @@
+# ─── Python ───────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+*.cover
+*.py,cover
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ─── Node / Angular / frontend ────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+package-lock.json.bak
+
+# Angular
+.angular/
+.sass-cache/
+connect.lock
+coverage/
+libpeerconnection.log
+testem.log
+typings/
+*.tsbuildinfo
+
+# Build output
+dist/
+tmp/
+out-tsc/
+bazel-out/
+
+# ─── Django ───────────────────────────────────────────────────────────────
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media/
+staticfiles/
+static_collected/
+
+# ─── AI / ML model weights (large binaries) ───────────────────────────────
+*.pt
+*.pth
+*.onnx
+*.h5
+*.keras
+*.pkl
+*.joblib
+*.safetensors
+*.bin
+*.ckpt
+
+# Hugging Face cache inside project
+**/.cache/
+.cache/
+
+# Keep small AI config/code (un-ignore if needed via ! rules below)
+!**/ai/**/config.json
+!**/ai/**/model_config.json
+!**/ai/**/*.py
+!**/ai/**/README.md
+
+# ─── User uploads & runtime data ───────────────────────────────────────────
+ecg_backend/media/
+
+# ─── Environment & secrets ────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+
+# ─── IDE & editors ────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# Cursor
+.cursor/
+
+# ─── OS ───────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ─── Accidental git copies / backups (HUGE — never commit) ────────────────
+.git_backup/
+.git_backup/**
+**/.git_backup/
+
+# ─── WFDB / signal data (often multi-MB per record) ─────────────────────────
+*.dat
+*.xyz
+*.xws
+*.edf
+*.hea
+
+# Optional: ignore all DATA samples (uncomment if you don't need them in git)
+# DATA/
+
+# ─── Misc ─────────────────────────────────────────────────────────────────
+*.bak
+*.tmp
+*.temp
+*.orig
+*.rej
+get-pip.py
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+*.wasm

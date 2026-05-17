@@ -1,0 +1,101 @@
+<!-- src/app/generator/generator.component.html -->
+<div class="container">
+
+  <header>
+    <div class="logo-line">
+      <span></span>
+      <h1>DOPPLER SYNTHESIZER</h1>
+      <span></span>
+    </div>
+    <p class="subtitle">Acoustic Frequency Shift Simulation Engine</p>
+  </header>
+
+  <div class="equation-box">
+    f<sub>obs</sub> = f<sub>0</sub> &times; (v<sub>sound</sub> &plusmn; v<sub>observer</sub>)
+                                   / (v<sub>sound</sub> &mnplus; v<sub>source</sub>)
+  </div>
+
+  <div class="grid">
+
+    <!-- ── Left panel: parameter controls ── -->
+    <div class="panel">
+      <div class="panel-title">// Parameters</div>
+
+      <div class="field">
+        <label>
+          Base Frequency
+          <span class="val">{{ freqLabel }}</span>
+        </label>
+        <input type="range" min="100" max="2000" step="10"
+               [(ngModel)]="frequency">
+        <div class="range-labels"><span>100 Hz</span><span>2000 Hz</span></div>
+      </div>
+
+      <div class="field">
+        <label>
+          Source Velocity
+          <span class="val">{{ velLabel }}</span>
+        </label>
+        <input type="range" min="5" max="300" step="5"
+               [(ngModel)]="velocity">
+        <div class="range-labels"><span>5 m/s</span><span>300 m/s</span></div>
+      </div>
+
+      <div class="field">
+        <label>
+          Duration
+          <span class="val">{{ durLabel }}</span>
+        </label>
+        <input type="range" min="1" max="10" step="0.5"
+               [(ngModel)]="duration">
+        <div class="range-labels"><span>1 s</span><span>10 s</span></div>
+      </div>
+
+      <div class="field">
+        <label>Waveform Type <span class="val">SHAPE</span></label>
+        <select class="waveform-select" [(ngModel)]="waveform">
+          <option value="sine">Sine</option>
+          <option value="sawtooth">Sawtooth</option>
+          <option value="square">Square</option>
+          <option value="triangle">Triangle</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>
+          Speed of Sound
+          <span class="val">{{ sndLabel }}</span>
+        </label>
+        <input type="range" min="200" max="600" step="1"
+               [(ngModel)]="soundSpeed">
+        <div class="range-labels"><span>200 m/s</span><span>600 m/s</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <button class="btn-generate" (click)="generate()" [disabled]="generating">
+        &#9654; Generate Wave
+      </button>
+      <button class="btn-play" (click)="play()" [disabled]="!canPlay || generating">
+        &#10227; Play Audio
+      </button>
+      <button class="btn-download" (click)="download()" [disabled]="!canDownload">
+        &#8595; Download WAV
+      </button>
+
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="progress"></div>
+      </div>
+      <div class="status" [ngClass]="statusClass">{{ statusMsg }}</div>
+    </div>
+
+    <!-- ── Right panel: waveform chart ── -->
+    <div class="viz-panel">
+      <div class="chart-wrap">
+        <div class="chart-label">// Waveform &mdash; Time Domain</div>
+        <canvas #waveCanvas height="160"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>

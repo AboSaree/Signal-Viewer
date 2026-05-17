@@ -1,0 +1,211 @@
+<main class="home-main">
+
+  <!-- ── Hero ── -->
+  <section class="home-hero">
+    <div class="home-hero-eyebrow">Medical Signal Analysis Platform</div>
+
+    <h1 class="home-hero-title">
+      <span class="dim">ANALYZE</span><br>
+      <span class="accent">SIGNALS</span><br>
+      <span class="dim">WITH PRECISION</span>
+    </h1>
+
+    <p class="home-hero-sub">
+      A unified platform for biomedical signal processing — from ECG/EEG multi-lead visualization
+      to real-time Doppler acoustic analysis and ML-powered drone audio classification. Built for researchers and clinicians.
+    </p>
+
+    <div class="home-cta-row">
+      <button class="btn-primary" (click)="goTo('signal')">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="1,10 4,10 6,3 9,17 12,7 15,13 17,10 19,10"/>
+        </svg>
+        Open Signal Viewer
+      </button>
+      <button class="btn-secondary" (click)="goTo('doppler')">
+        ◉ Launch Doppler
+      </button>
+    </div>
+
+    <!-- Animated waveform -->
+    <div class="home-wave-deco">
+      <svg viewBox="0 0 700 80" xmlns="http://www.w3.org/2000/svg">
+        <polyline #waveAnim points="" stroke="var(--cyan)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ── Stats ── -->
+  <div class="home-section-label">Platform Capabilities</div>
+  <div class="home-stats">
+    <div class="home-stat"><div class="home-stat-val">12+</div><div class="home-stat-lbl">Lead Formats</div></div>
+    <div class="home-stat"><div class="home-stat-val">WFDB</div><div class="home-stat-lbl">Standard Support</div></div>
+    <div class="home-stat"><div class="home-stat-val">8192</div><div class="home-stat-lbl">DFT Window (N)</div></div>
+    <div class="home-stat"><div class="home-stat-val">RT</div><div class="home-stat-lbl">Real-Time Render</div></div>
+  </div>
+
+  <!-- ── Module Cards ── -->
+  <div class="home-section-label">Available Modules</div>
+  <div class="home-cards-grid">
+
+    <!-- Signal Viewer -->
+    <div class="home-card card-cyan" (click)="goTo('signal')">
+      <div class="home-card-icon">
+        <svg width="26" height="26" viewBox="0 0 20 20" fill="none" stroke="var(--cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1,10 4,10 6,3 9,17 12,7 15,13 17,10 19,10"/>
+        </svg>
+      </div>
+      <span class="home-card-tag">MODULE 01</span>
+      <h2 class="home-card-title">Medical Signal Viewer</h2>
+      <p class="home-card-desc">
+        Multi-lead ECG and EEG visualization with WFDB format support.
+        Upload records, inspect individual channels, and run AI-powered diagnostic analysis
+        with scatter, polar, and XOR anomaly detection.
+      </p>
+      <div class="home-card-features">
+        <div class="home-card-feature">WFDB + .HEA / .DAT / .CSV formats</div>
+        <div class="home-card-feature">Separate &amp; overlay channel display modes</div>
+        <div class="home-card-feature">AI diagnosis with confidence scoring</div>
+        <div class="home-card-feature">Scatter, polar &amp; XOR stack analysis</div>
+        <div class="home-card-feature">Real-time scrollable waveform playback</div>
+      </div>
+      <div class="home-card-cta">
+        <span class="home-card-cta-label">OPEN MODULE</span>
+        <span class="home-card-cta-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Doppler -->
+    <div class="home-card card-amber" (click)="goTo('doppler')">
+      <div class="home-card-icon" style="font-size:24px">🔊</div>
+      <span class="home-card-tag">MODULE 02</span>
+      <h2 class="home-card-title">Doppler Synthesizer &amp; Detector</h2>
+      <p class="home-card-desc">
+        Dual-function acoustic Doppler tool. Synthesize custom Doppler-shifted waveforms
+        with configurable source velocity and waveform type, or upload a real vehicle
+        pass-by recording to extract velocity via sliding DFT analysis.
+      </p>
+      <div class="home-card-features">
+        <div class="home-card-feature">Sine / sawtooth / square / triangle waveforms</div>
+        <div class="home-card-feature">Configurable velocity &amp; speed of sound</div>
+        <div class="home-card-feature">Sliding Hann-windowed DFT (N=8192)</div>
+        <div class="home-card-feature">Energy gating &amp; median filter smoothing</div>
+        <div class="home-card-feature">Real velocity extraction with confidence score</div>
+      </div>
+      <div class="home-card-cta">
+        <span class="home-card-cta-label">OPEN MODULE</span>
+        <span class="home-card-cta-arrow" style="color:var(--amber)">→</span>
+      </div>
+    </div>
+
+    <!-- Drone Detector -->
+    <div class="home-card card-red" (click)="goTo('drone')">
+      <div class="home-card-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M6.3 6.3a7 7 0 0 0 0 11.4M17.7 6.3a7 7 0 0 1 0 11.4"/>
+          <path d="M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17"/>
+        </svg>
+      </div>
+      <span class="home-card-tag">MODULE 03</span>
+      <h2 class="home-card-title">Drone Detector</h2>
+      <p class="home-card-desc">
+        ML-powered acoustic drone classification. Upload any audio recording and let
+        the backend model analyze its frequency signature to determine whether a drone
+        is present or absent in the sound environment.
+      </p>
+      <div class="home-card-features">
+        <div class="home-card-feature">Supports .WAV · .MP3 · .OGG · .FLAC</div>
+        <div class="home-card-feature">Drag &amp; drop audio upload with preview</div>
+        <div class="home-card-feature">REST API integration (Flask backend)</div>
+        <div class="home-card-feature">Real-time classification progress tracking</div>
+        <div class="home-card-feature">Drone detected / not detected result card</div>
+      </div>
+      <div class="home-card-cta">
+        <span class="home-card-cta-label">OPEN MODULE</span>
+        <span class="home-card-cta-arrow" style="color:var(--red)">→</span>
+      </div>
+    </div>
+
+    <!-- Market Signal Visualizer -->
+    <div class="home-card card-green" (click)="goTo('stock')">
+      <div class="home-card-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+          <polyline points="16 7 22 7 22 13"/>
+        </svg>
+      </div>
+      <span class="home-card-tag">MODULE 04</span>
+      <h2 class="home-card-title">Market Signal Visualizer</h2>
+      <p class="home-card-desc">
+        Advanced financial charting with OHLC/candlestick rendering, technical indicators,
+        and an on-device LSTM neural network for short-term price forecasting.
+        Supports stocks, forex, and commodities from multi-company CSV files.
+      </p>
+      <div class="home-card-features">
+        <div class="home-card-feature">Candle · Line · OHLC · Heikin Ashi · Hollow Candle</div>
+        <div class="home-card-feature">SMA 20/50/200 · RSI 14 · Volume Bars</div>
+        <div class="home-card-feature">On-device LSTM price forecasting (WebGL GPU)</div>
+        <div class="home-card-feature">Multi-company CSV — Stocks, Forex, Commodities</div>
+        <div class="home-card-feature">Crosshair OHLC readout · Confidence bands</div>
+      </div>
+      <div class="home-card-cta">
+        <span class="home-card-cta-label">OPEN MODULE</span>
+        <span class="home-card-cta-arrow" style="color:var(--green)">→</span>
+      </div>
+    </div>
+
+    <!-- Microbiome Signals -->
+    <div class="home-card card-purple" (click)="goTo('microbio')">
+      <div class="home-card-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2a10 10 0 0 1 7.39 16.74"/>
+          <path d="M12 2a10 10 0 0 0-7.39 16.74"/>
+          <path d="M12 22a10 10 0 0 1-4.9-1.38"/>
+          <path d="M12 22a10 10 0 0 0 4.9-1.38"/>
+          <path d="M2 12h3M19 12h3M12 2v3M12 19v3"/>
+        </svg>
+      </div>
+      <span class="home-card-tag">MODULE 05</span>
+      <h2 class="home-card-title">Microbiome Signals</h2>
+      <p class="home-card-desc">
+        IBD profiling platform for iHMP / iPOP microbiome datasets. Upload metadata
+        and taxonomy CSVs to visualize bacterial diversity, dysbiosis indices, taxonomic
+        composition, and generate per-patient risk profiles — fully client-side.
+      </p>
+      <div class="home-card-features">
+        <div class="home-card-feature">Dysbiosis Index signal plots over time</div>
+        <div class="home-card-feature">Good / bad bacteria abundance tracking</div>
+        <div class="home-card-feature">Stacked taxonomic barplot (single &amp; cohort)</div>
+        <div class="home-card-feature">Diversity heatmap — CD / UC / nonIBD groups</div>
+        <div class="home-card-feature">Patient risk profile with radar chart</div>
+      </div>
+      <div class="home-card-cta">
+        <span class="home-card-cta-label">OPEN MODULE</span>
+        <span class="home-card-cta-arrow" style="color:var(--purple)">→</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Tech strip ── -->
+  <div class="home-tech">
+    <span class="home-tech-label">BUILT WITH</span>
+    <span class="home-tech-badge">Angular 17</span>
+    <span class="home-tech-badge">Web Audio API</span>
+    <span class="home-tech-badge">Canvas 2D</span>
+    <span class="home-tech-badge">Chart.js</span>
+    <span class="home-tech-badge">WFDB</span>
+    <span class="home-tech-badge">Space Mono</span>
+    <span class="home-tech-badge">Syne Display</span>
+    <span class="home-tech-badge">DM Sans</span>
+    <span class="home-tech-badge">Flask REST API</span>
+    <span class="home-tech-badge">Lightweight Charts</span>
+    <span class="home-tech-badge">TensorFlow.js</span>
+    <span class="home-tech-badge">PapaParse</span>
+    <span class="home-tech-badge">D3.js</span>
+  </div>
+
+</main>

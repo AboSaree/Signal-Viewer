@@ -1,0 +1,131 @@
+<!-- src/app/detector/detector.component.html -->
+<div class="container">
+
+  <div class="section-divider">
+    <span class="section-divider-label">&#9671; Part II</span>
+  </div>
+
+  <div class="det-header">
+    <div class="logo-line">
+      <span style="background:linear-gradient(90deg,transparent,var(--accent2))"></span>
+      <h2>VELOCITY DETECTOR</h2>
+      <span style="background:linear-gradient(90deg,var(--accent2),transparent)"></span>
+    </div>
+    <p>Upload a vehicle pass-by recording &middot; extract speed from Doppler shift</p>
+  </div>
+
+  <div class="equation-box-orange">
+    v = c &times; (f<sub>approach</sub> &minus; f<sub>recede</sub>)
+          / (f<sub>approach</sub> + f<sub>recede</sub>)
+  </div>
+
+  <div class="grid">
+
+    <!-- ── Left panel: upload + algorithm steps ── -->
+    <div class="panel">
+      <div class="panel-title" style="color:var(--accent2)">// Upload Audio</div>
+
+      <div class="drop-zone"
+           [class.drag-over]="isDragOver"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave()"
+           (drop)="onDrop($event)">
+        <input type="file" accept="audio/*" (change)="onFileChange($event)">
+        <span class="drop-icon">&#127925;</span>
+        <div class="drop-label">
+          <strong>Click or drag</strong> an audio file here<br>
+          <span style="font-size:0.72rem">WAV &middot; MP3 &middot; OGG &middot; M4A</span>
+        </div>
+        <div class="drop-file-name">{{ fileName }}</div>
+      </div>
+
+      <audio *ngIf="audioSrc" class="audio-player" controls [src]="audioSrc"></audio>
+
+      <div class="divider"></div>
+
+      <button class="btn-analyse" (click)="analyse()" [disabled]="!canAnalyse || analysing">
+        &#9654; Analyse Audio
+      </button>
+
+      <div class="divider"></div>
+
+      <div class="panel-title" style="color:var(--accent2);margin-bottom:16px;">// Algorithm Steps</div>
+      <ul class="steps-list">
+        <li><span class="step-num">01</span>Decode audio &rarr; mix all channels to mono</li>
+        <li><span class="step-num">02</span>Sliding Hann-windowed DFT (N=8192, hop=0.25 s)</li>
+        <li><span class="step-num">03</span>Peak detection in 200&ndash;700 Hz band</li>
+        <li><span class="step-num">04</span>Energy gate: keep top 30% loudest frames</li>
+        <li><span class="step-num">05</span>5-point median filter to remove harmonic jumps</li>
+        <li><span class="step-num">06</span>Split at peak-energy frame &rarr; approach / recede</li>
+        <li><span class="step-num">07</span>75th / 25th percentile estimates &rarr; Doppler formula</li>
+      </ul>
+
+      <div class="det-progress-bar">
+        <div class="det-progress-fill" [style.width.%]="progress"></div>
+      </div>
+      <div class="det-status" [ngClass]="statusClass">{{ statusMsg }}</div>
+    </div>
+
+    <!-- ── Right panel: results + charts ── -->
+    <div class="viz-panel">
+
+      <!-- Result metric cards -->
+      <div *ngIf="showResults" id="detResults">
+        <div class="result-grid">
+          <div class="result-card">
+            <span class="result-card-val orange">{{ resVelocity }}</span>
+            <span class="result-card-lbl">Estimated Velocity (m/s)</span>
+          </div>
+          <div class="result-card">
+            <span class="result-card-val blue">{{ resVelocityKmh }}</span>
+            <span class="result-card-lbl">Estimated Velocity (km/h)</span>
+          </div>
+          <div class="result-card">
+            <span class="result-card-val blue">{{ resBaseFreq }}</span>
+            <span class="result-card-lbl">Base Frequency (Hz)</span>
+          </div>
+          <div class="result-card">
+            <span class="result-card-val orange">{{ resApproach }}</span>
+            <span class="result-card-lbl">Approach Freq (Hz)</span>
+          </div>
+          <div class="result-card">
+            <span class="result-card-val blue">{{ resRecede }}</span>
+            <span class="result-card-lbl">Recede Freq (Hz)</span>
+          </div>
+          <div class="result-card">
+            <span class="result-card-val orange">{{ resConf }}</span>
+            <span class="result-card-lbl">Confidence Score</span>
+            <div class="conf-bar-wrap">
+              <div class="conf-bar-fill" [style.width]="confBarWidth"></div>
+            </div>
+            <div class="conf-label"><span>Low</span><span>High</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Amplitude waveform chart -->
+      <div *ngIf="showAmpChart" class="det-chart-wrap">
+        <div class="det-chart-label">// Waveform &mdash; Amplitude vs Time</div>
+        <canvas #detAmpCanvas height="160"></canvas>
+      </div>
+
+      <!-- Frequency track chart -->
+      <div *ngIf="showFreqChart" class="det-chart-wrap">
+        <div class="det-chart-label">// Frequency Track &mdash; Approach &rarr; Recede</div>
+        <canvas #detFreqCanvas height="180"></canvas>
+      </div>
+
+      <!-- Placeholder -->
+      <div *ngIf="!showResults && !showAmpChart" class="det-chart-wrap"
+           style="min-height:300px;display:flex;align-items:center;
+                  justify-content:center;flex-direction:column;gap:12px;">
+        <span style="font-size:3rem;opacity:0.2">&#128225;</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;
+                     color:var(--muted);letter-spacing:0.2em;text-transform:uppercase;">
+          Awaiting audio input
+        </span>
+      </div>
+
+    </div>
+  </div>
+</div>

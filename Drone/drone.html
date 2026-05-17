@@ -1,0 +1,531 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Detector</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ── CSS Variables ─────────────────────────────────────────── */
+        :root {
+            --bg:      #e8f0ff;
+            --panel:   #ffffff;
+            --border:  #aac4f0;
+            --accent:  #0055ee;
+            --accent2: #ff4500;
+            --accent3: #009900;
+            --text:    #0d1f3c;
+            --muted:   #5577aa;
+            --glow:    0 0 20px rgba(0,85,238,0.2);
+        }
+
+        /* ── Reset ─────────────────────────────────────────────────── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ── Body & Background ─────────────────────────────────────── */
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Barlow', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 10%, rgba(0,100,255,0.10) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 90%, rgba(255,69,0,0.07)  0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 3px,
+                rgba(0,0,0,0.025) 3px,
+                rgba(0,0,0,0.025) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ── Layout ────────────────────────────────────────────────── */
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* ── Header ────────────────────────────────────────────────── */
+        header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .logo-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .logo-line span {
+            height: 1px;
+            width: 80px;
+            background: linear-gradient(90deg, transparent, var(--accent2));
+        }
+        .logo-line span:last-child {
+            background: linear-gradient(90deg, var(--accent2), transparent);
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: clamp(1.6rem, 4vw, 2.6rem);
+            color: var(--accent2);
+            text-shadow: 0 0 18px rgba(255,69,0,0.2);
+            letter-spacing: 0.08em;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--muted);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        /* ── Panel ─────────────────────────────────────────────────── */
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 28px;
+            position: relative;
+            box-shadow: 0 4px 24px rgba(0,85,238,0.08), 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+        }
+
+        .panel-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent2);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            opacity: 0.8;
+        }
+
+        /* ── Form Controls ─────────────────────────────────────────── */
+        .field { margin-bottom: 20px; }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--muted);
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* ── Drop Zone ─────────────────────────────────────────────── */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 6px;
+            padding: 40px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            background: rgba(0,85,238,0.02);
+            position: relative;
+        }
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: var(--accent2);
+            background: rgba(255,69,0,0.04);
+        }
+
+        .drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .drop-icon {
+            font-size: 2.4rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .drop-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--muted);
+            letter-spacing: 0.1em;
+        }
+        .drop-label strong { color: var(--accent2); }
+
+        .drop-file-name {
+            margin-top: 10px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent2);
+            word-break: break-all;
+        }
+
+        /* ── Audio Player ──────────────────────────────────────────── */
+        .audio-player {
+            width: 100%;
+            margin-top: 14px;
+            accent-color: var(--accent2);
+        }
+
+        .player-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── Buttons ───────────────────────────────────────────────── */
+        .btn-analyse {
+            width: 100%;
+            padding: 14px;
+            background: transparent;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 2px;
+            border: 1px solid var(--accent2);
+            color: var(--accent2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-top: 14px;
+        }
+
+        .btn-analyse::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--accent2);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: -1;
+        }
+
+        .btn-analyse:hover:not(:disabled) {
+            color: #fff;
+        }
+
+        .btn-analyse:hover:not(:disabled)::before {
+            transform: translateX(0);
+        }
+
+        .btn-analyse:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        /* ── Status Messages ───────────────────────────────────────── */
+        .status {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 16px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            min-height: 38px;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status.active { color: var(--accent3); border-color: rgba(0,153,0,0.25); }
+        .status.error  { color: #cc0000; border-color: rgba(204,0,0,0.2); }
+        .status.info   { color: var(--accent); border-color: rgba(0,85,238,0.2); }
+
+        /* ── Progress Bar ──────────────────────────────────────────── */
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent2), var(--accent3));
+            width: 0%;
+            transition: width 0.2s;
+        }
+
+        /* ── Result Cards ──────────────────────────────────────────── */
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 18px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            animation: fadeUp 0.4s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card-val {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.7rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+            color: var(--accent2);
+        }
+
+        .result-card-lbl {
+            font-size: 0.65rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+        }
+
+        /* ── Confidence Bar ────────────────────────────────────────── */
+        .conf-bar-wrap {
+            background: var(--border);
+            border-radius: 99px;
+            height: 6px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .conf-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--accent2), var(--accent3));
+            transition: width 0.8s ease;
+        }
+
+        .conf-label {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* ── Responsive ────────────────────────────────────────────── */
+        @media (max-width: 600px) {
+            .result-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo-line">
+                <span></span>
+                <h1>🚁 DRONE DETECTOR</h1>
+                <span></span>
+            </div>
+            <p class="subtitle">Audio Classification System</p>
+        </header>
+
+        <div class="panel">
+            <div class="panel-title">Upload Audio</div>
+
+            <div class="field">
+                <div class="drop-zone" id="dropZone">
+                    <span class="drop-icon">📁</span>
+                    <input type="file" id="audioInput" accept="audio/*">
+                    <label class="drop-label">
+                        drag and drop or <strong>click to browse</strong>
+                    </label>
+                    <div class="drop-file-name" id="fileName" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div id="playerSection" style="display: none;" class="player-section">
+                <label style="margin-bottom: 8px;">Audio Preview</label>
+                <audio class="audio-player" id="audioPlayer" controls></audio>
+            </div>
+
+            <button class="btn-analyse" id="analyzeBtn" onclick="uploadAudio()" disabled>Analyze Sound</button>
+
+            <div id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div id="status" class="status" style="display: none;"></div>
+
+            <div id="resultContainer" style="display: none; margin-top: 20px;">
+                <div class="panel-title">Classification Result</div>
+                <div class="result-grid">
+                    <div class="result-card">
+                        <span class="result-card-val" id="resultLabel">—</span>
+                        <span class="result-card-lbl">Classification</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('audioInput');
+        const fileName = document.getElementById('fileName');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playerSection = document.getElementById('playerSection');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const statusDiv = document.getElementById('status');
+        const resultContainer = document.getElementById('resultContainer');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+
+        // File selection handler
+        fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+
+        // Drag and drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect(files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file) return;
+
+            fileName.textContent = file.name;
+            fileName.style.display = 'block';
+
+            // Create a URL for the audio file
+            const audioURL = URL.createObjectURL(file);
+            audioPlayer.src = audioURL;
+            playerSection.style.display = 'block';
+
+            // Enable analyze button
+            analyzeBtn.disabled = false;
+
+            // Clear previous results
+            resultContainer.style.display = 'none';
+            statusDiv.style.display = 'none';
+        }
+
+        async function uploadAudio() {
+            const fileInput = document.getElementById('audioInput');
+            
+            if (fileInput.files.length === 0) {
+                showStatus('Please select a file!', 'error');
+                return;
+            }
+
+            analyzeBtn.disabled = true;
+            resultContainer.style.display = 'none';
+            progressContainer.style.display = 'block';
+            showStatus('Analyzing audio...', 'info');
+
+            const formData = new FormData();
+            formData.append('audio', fileInput.files[0]);
+
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += Math.random() * 30;
+                    if (progress > 90) progress = 90;
+                    progressFill.style.width = progress + '%';
+                }
+            }, 200);
+
+            try {
+                const response = await fetch('/api/drone/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    showStatus(`Error: ${data.error}`, 'error');
+                } else {
+                    displayResult(data.label, data.confidence);
+                    showStatus('Classification complete!', 'active');
+                }
+            } catch (err) {
+                clearInterval(progressInterval);
+                showStatus('Error connecting to server.', 'error');
+            }
+
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                progressFill.style.width = '0%';
+                analyzeBtn.disabled = false;
+            }, 1500);
+        }
+
+        function displayResult(label, confidence) {
+            document.getElementById('resultLabel').textContent = label.toUpperCase();
+            resultContainer.style.display = 'block';
+        }
+
+        function showStatus(message, type = 'info') {
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+            statusDiv.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

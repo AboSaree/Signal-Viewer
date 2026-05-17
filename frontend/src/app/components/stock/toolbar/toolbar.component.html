@@ -1,0 +1,222 @@
+<!-- src/app/components/toolbar/toolbar.component.html -->
+
+<div class="toolbar" (click)="$event.stopPropagation()">
+  <!-- Top Bar -->
+  <div class="toolbar-top">
+    <div class="toolbar-left">
+      <button class="back-btn" (click)="goBack.emit()" title="Back to Upload">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <!-- Company Dropdown -->
+      <div class="dropdown-wrapper company-dropdown">
+        <button class="dropdown-trigger company-trigger"
+          (click)="companyDropdownOpen = !companyDropdownOpen; chartTypeDropdownOpen = false; indicatorDropdownOpen = false; forecastSettingsOpen = false;">
+          <span class="company-icon">🏢</span>
+          <span class="company-name">{{ selectedCompany }}</span>
+          <span class="company-count" *ngIf="companies.length > 1">
+            {{ companies.length }}
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 10l5 5 5-5z" />
+          </svg>
+        </button>
+
+        <div class="dropdown-menu company-menu" *ngIf="companyDropdownOpen">
+          <div class="company-search-header">
+            <span class="menu-title">Select </span>
+            <span class="menu-count">{{ companies.length }} loaded</span>
+          </div>
+          <div class="company-list">
+            <button *ngFor="let company of companies; let i = index" [class.active]="selectedCompany === company"
+              (click)="selectCompany(company)" class="company-option">
+              <span class="company-index">#{{ i + 1 }}</span>
+              <span class="company-label">{{ company }}</span>
+              <svg *ngIf="selectedCompany === company" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                class="check-icon">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="signal-category-badge" [attr.data-category]="signalCategory">
+        {{ signalCategory | uppercase }}
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Chart Type Dropdown -->
+      <div class="dropdown-wrapper">
+        <button class="dropdown-trigger"
+          (click)="chartTypeDropdownOpen = !chartTypeDropdownOpen; companyDropdownOpen = false; indicatorDropdownOpen = false; forecastSettingsOpen = false;">
+          <span class="chart-icon">{{ getChartTypeIcon() }}</span>
+          <span>{{ config.chartType }}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 10l5 5 5-5z" />
+          </svg>
+        </button>
+        <div class="dropdown-menu" *ngIf="chartTypeDropdownOpen">
+          <button *ngFor="let type of chartTypes" [class.active]="config.chartType === type.value"
+            (click)="setChartType(type.value)">
+            <span class="menu-icon">{{ type.icon }}</span>
+            {{ type.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Time Period Buttons -->
+      <div class="time-periods">
+        <button *ngFor="let period of timePeriods" [class.active]="config.timePeriod === period"
+          (click)="setTimePeriod(period)" class="period-btn">
+          {{ period }}
+        </button>
+      </div>
+
+      <!-- Indicators Dropdown (with Forecast) -->
+      <div class="dropdown-wrapper">
+        <button class="dropdown-trigger indicator-trigger"
+          (click)="indicatorDropdownOpen = !indicatorDropdownOpen; companyDropdownOpen = false; chartTypeDropdownOpen = false; forecastSettingsOpen = false;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3v18h18" />
+            <path d="M7 16l4-8 4 4 4-8" />
+          </svg>
+          Indicators
+          <span class="active-count" *ngIf="getActiveIndicatorCount() > 0">
+            {{ getActiveIndicatorCount() }}
+          </span>
+        </button>
+        <div class="dropdown-menu indicators-menu" *ngIf="indicatorDropdownOpen">
+          <!-- Moving Averages Section -->
+          <div class="menu-section-title">Moving Averages</div>
+          <label class="indicator-item">
+            <input type="checkbox" [checked]="config.showSMA20" (change)="toggleIndicator('sma20')">
+            <span class="indicator-color" style="background: #e91e63;"></span>
+            SMA 20
+          </label>
+          <label class="indicator-item">
+            <input type="checkbox" [checked]="config.showSMA50" (change)="toggleIndicator('sma50')">
+            <span class="indicator-color" style="background: #ff9800;"></span>
+            SMA 50
+          </label>
+          <label class="indicator-item">
+            <input type="checkbox" [checked]="config.showSMA200" (change)="toggleIndicator('sma200')">
+            <span class="indicator-color" style="background: #9c27b0;"></span>
+            SMA 200
+          </label>
+
+          <div class="menu-divider"></div>
+
+          <!-- Oscillators Section -->
+          <div class="menu-section-title">Oscillators</div>
+          <label class="indicator-item">
+            <input type="checkbox" [checked]="config.showRSI" (change)="toggleIndicator('rsi')">
+            <span class="indicator-color" style="background: #ff9800;"></span>
+            RSI 14
+          </label>
+
+          <div class="menu-divider"></div>
+
+          <!-- Volume Section -->
+          <div class="menu-section-title">Volume</div>
+          <label class="indicator-item">
+            <input type="checkbox" [checked]="config.showVolume" (change)="toggleIndicator('volume')">
+            <span class="indicator-color" style="background: #26a69a;"></span>
+            Volume Bars
+          </label>
+
+          <div class="menu-divider"></div>
+
+          <!-- AI Forecast Section -->
+          <div class="menu-section-title forecast-title">
+            <span> AI Forecast</span>
+            <span class="forecast-model-tag">LSTM</span>
+          </div>
+          <label class="indicator-item forecast-item">
+            <input type="checkbox" [checked]="config.showForecast" (change)="toggleIndicator('forecast')">
+            <span class="indicator-color forecast-color"></span>
+            <div class="forecast-label-group">
+              <span class="forecast-main-label">LSTM Price Prediction</span>
+              <span class="forecast-sub-label">jengyang/lstm-stock-prediction-model</span>
+            </div>
+          </label>
+
+          <!-- Forecast Days Selector (only visible when forecast is ON) -->
+          <div class="forecast-days-selector" *ngIf="config.showForecast">
+            <span class="days-label">Forecast Period:</span>
+            <div class="days-buttons">
+              <button *ngFor="let days of forecastDayOptions" [class.active]="config.forecastDays === days"
+                (click)="setForecastDays(days); $event.stopPropagation();" class="days-btn">
+                {{ days }}d
+              </button>
+            </div>
+          </div>
+
+          <!-- Forecast Status in Menu -->
+          <div class="forecast-status-row" *ngIf="config.showForecast">
+            <div class="status-indicator" [ngClass]="forecastStatus">
+              <span class="status-dot"></span>
+              <span class="status-text">
+                {{ forecastStatus === 'loading' ? 'Running model...' :
+                forecastStatus === 'success' ? 'Forecast ready' :
+                forecastStatus === 'error' ? 'Forecast failed' :
+                'Ready' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <button class="icon-btn" title="Fullscreen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- OHLC Data Bar -->
+  <div class="ohlc-bar" *ngIf="crosshairData">
+    <span class="ohlc-date">{{ formatDateEnglish(crosshairData.time) }}</span>
+    <span class="ohlc-item">O <span class="ohlc-value">{{ crosshairData.open | number:'1.2-2' }}</span></span>
+    <span class="ohlc-item">H <span class="ohlc-value">{{ crosshairData.high | number:'1.2-2' }}</span></span>
+    <span class="ohlc-item">L <span class="ohlc-value">{{ crosshairData.low | number:'1.2-2' }}</span></span>
+    <span class="ohlc-item">C <span class="ohlc-value">{{ crosshairData.close | number:'1.2-2' }}</span></span>
+    <span class="ohlc-item">Vol <span class="ohlc-value">{{ formatVolume(crosshairData.volume) }}</span></span>
+    <span class="ohlc-change" [class.positive]="crosshairData.change >= 0" [class.negative]="crosshairData.change < 0">
+      {{ crosshairData.change >= 0 ? '+' : '' }}{{ crosshairData.change | number:'1.2-2' }}
+      ({{ crosshairData.changePercent >= 0 ? '+' : '' }}{{ crosshairData.changePercent | number:'1.2-2' }}%)
+    </span>
+
+    <span class="sma-value sma20" *ngIf="config.showSMA20 && crosshairData.sma20">
+      SMA20 · {{ crosshairData.sma20 | number:'1.2-2' }}
+    </span>
+    <span class="sma-value sma50" *ngIf="config.showSMA50 && crosshairData.sma50">
+      SMA50 · {{ crosshairData.sma50 | number:'1.2-2' }}
+    </span>
+    <span class="sma-value sma200" *ngIf="config.showSMA200 && crosshairData.sma200">
+      SMA200 · {{ crosshairData.sma200 | number:'1.2-2' }}
+    </span>
+
+    <span class="rsi-inline" *ngIf="config.showRSI && crosshairData.rsi !== undefined">
+      RSI · <span [class.rsi-high]="crosshairData.rsi >= 70" [class.rsi-low]="crosshairData.rsi <= 30"
+        [class.rsi-mid]="crosshairData.rsi > 30 && crosshairData.rsi < 70">{{ crosshairData.rsi | number:'1.2-2'
+        }}</span>
+    </span>
+
+    <!-- Forecast value in OHLC bar -->
+    <span class="forecast-inline" *ngIf="config.showForecast && crosshairData.forecast !== undefined">
+      🤖 Forecast · <span class="forecast-price">{{ crosshairData.forecast | number:'1.2-2' }}</span>
+    </span>
+  </div>
+</div>
+
+<!-- Click outside to close dropdowns -->
+<div class="dropdown-backdrop"
+  *ngIf="companyDropdownOpen || chartTypeDropdownOpen || indicatorDropdownOpen || forecastSettingsOpen"
+  (click)="closeAllDropdowns()"></div>

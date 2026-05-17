@@ -1,0 +1,72 @@
+.rsi-info-panel {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 16px;
+    background: var(--panel-raised);
+    border-top: 1px solid var(--border);
+}
+
+.rsi-gauge {
+    flex: 1;
+    max-width: 300px;
+
+    .rsi-bar {
+        position: relative;
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: visible;
+
+        .rsi-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .rsi-marker {
+            position: absolute;
+            top: -4px;
+            width: 3px;
+            height: 14px;
+            background: #fff;
+            border-radius: 2px;
+            transform: translateX(-50%);
+            transition: left 0.3s ease;
+        }
+    }
+
+    .rsi-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 4px;
+        font-size: 0.7rem;
+        color: #555;
+
+        .oversold-zone {
+            color: #26a69a;
+        }
+
+        .overbought-zone {
+            color: #ef5350;
+        }
+    }
+}
+
+.rsi-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .rsi-number {
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .rsi-text {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+}

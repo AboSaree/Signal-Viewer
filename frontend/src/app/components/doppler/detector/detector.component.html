@@ -1,0 +1,115 @@
+<div class="sv-card">
+  <div class="sv-card-head">
+    <div class="sv-card-label">
+      <div class="sv-card-label-pip"></div>
+      VELOCITY DETECTOR
+    </div>
+    <div class="sv-tag">PART II · ANALYSIS</div>
+  </div>
+  <div class="sv-card-body">
+
+    <p class="sv-section-desc">
+      v = c &times; (f<sub>approach</sub> &minus; f<sub>recede</sub>) / (f<sub>approach</sub> + f<sub>recede</sub>)
+    </p>
+
+    <div class="dp-grid">
+
+      <!-- Upload + steps -->
+      <div class="dp-panel">
+        <div class="dp-panel-head">
+          <div class="sv-card-label"><div class="sv-card-label-pip"></div>UPLOAD AUDIO</div>
+          <div class="sv-tag">INPUT</div>
+        </div>
+        <div class="dp-panel-body">
+
+          <div class="dp-drop" [class.drag-over]="isDragOver"
+               (dragover)="onDragOver($event)" (dragleave)="onDragLeave()" (drop)="onDrop($event)">
+            <input type="file" accept="audio/*" (change)="onFileChange($event)">
+            <div class="dp-drop-icon">🎵</div>
+            <div class="dp-drop-label">
+              <strong>Click or drag</strong> an audio file<br>
+              <span>WAV &middot; MP3 &middot; OGG &middot; M4A</span>
+            </div>
+            <div class="dp-drop-filename">{{ fileName }}</div>
+          </div>
+
+          <audio *ngIf="audioSrc" controls [src]="audioSrc" class="dp-audio"></audio>
+
+          <button class="sv-render-btn" style="width:100%;justify-content:center"
+                  (click)="analyse()" [disabled]="!canAnalyse || analysing">
+            ▶ Analyse Audio
+          </button>
+
+          <div class="dp-divider"></div>
+
+          <div class="sv-card-label" style="font-size:10px;margin-bottom:4px">
+            <div class="sv-card-label-pip"></div>ALGORITHM STEPS
+          </div>
+          <div class="dp-steps">
+            <div class="dp-step"><span class="dp-step-num">01</span>Decode audio &rarr; mix all channels to mono</div>
+            <div class="dp-step"><span class="dp-step-num">02</span>Sliding Hann-windowed DFT (N=8192, hop=0.25 s)</div>
+            <div class="dp-step"><span class="dp-step-num">03</span>Peak detection in 200&ndash;700 Hz band</div>
+            <div class="dp-step"><span class="dp-step-num">04</span>Energy gate: keep top 30% loudest frames</div>
+            <div class="dp-step"><span class="dp-step-num">05</span>5-point median filter to remove harmonic jumps</div>
+            <div class="dp-step"><span class="dp-step-num">06</span>Split at peak-energy frame &rarr; approach / recede</div>
+            <div class="dp-step"><span class="dp-step-num">07</span>75th / 25th percentile &rarr; Doppler formula</div>
+          </div>
+
+          <div class="dp-progress-wrap">
+            <div class="dp-progress-fill" [style.width.%]="progress"></div>
+          </div>
+          <div class="dp-status" [ngClass]="statusClass">{{ statusMsg }}</div>
+        </div>
+      </div>
+
+      <!-- Results + charts -->
+      <div class="dp-viz-panel">
+
+        <div *ngIf="showResults" class="dp-result-grid">
+          <div class="dp-result-card">
+            <div class="dp-result-val amber">{{ resVelocity }}</div>
+            <div class="dp-result-lbl">Velocity (m/s)</div>
+          </div>
+          <div class="dp-result-card">
+            <div class="dp-result-val">{{ resVelocityKmh }}</div>
+            <div class="dp-result-lbl">Velocity (km/h)</div>
+          </div>
+          <div class="dp-result-card">
+            <div class="dp-result-val">{{ resBaseFreq }}</div>
+            <div class="dp-result-lbl">Base Freq (Hz)</div>
+          </div>
+          <div class="dp-result-card">
+            <div class="dp-result-val amber">{{ resApproach }}</div>
+            <div class="dp-result-lbl">Approach Freq (Hz)</div>
+          </div>
+          <div class="dp-result-card">
+            <div class="dp-result-val">{{ resRecede }}</div>
+            <div class="dp-result-lbl">Recede Freq (Hz)</div>
+          </div>
+          <div class="dp-result-card">
+            <div class="dp-result-val amber">{{ resConf }}</div>
+            <div class="dp-result-lbl">Confidence</div>
+            <div class="dp-conf-bar-wrap"><div class="dp-conf-bar-fill" [style.width]="confBarWidth"></div></div>
+            <div class="dp-conf-labels"><span>Low</span><span>High</span></div>
+          </div>
+        </div>
+
+        <div *ngIf="showAmpChart" class="dp-chart-wrap">
+          <div class="dp-chart-head"><div class="dp-chart-label">// WAVEFORM — AMPLITUDE VS TIME</div></div>
+          <div class="dp-chart-body"><canvas #detAmpCanvas height="140"></canvas></div>
+        </div>
+
+        <div *ngIf="showFreqChart" class="dp-chart-wrap">
+          <div class="dp-chart-head"><div class="dp-chart-label">// FREQUENCY TRACK — APPROACH &rarr; RECEDE</div></div>
+          <div class="dp-chart-body"><canvas #detFreqCanvas height="160"></canvas></div>
+        </div>
+
+        <div *ngIf="!showResults && !showAmpChart" class="dp-placeholder">
+          <div class="dp-placeholder-icon">📡</div>
+          <div class="dp-placeholder-text">Awaiting audio input</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

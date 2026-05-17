@@ -1,0 +1,19 @@
+<div class="rsi-info-panel" *ngIf="rsiValue !== undefined">
+    <div class="rsi-gauge">
+        <div class="rsi-bar">
+            <div class="rsi-fill" [style.width.%]="rsiValue" [style.background]="getRSIColor()"></div>
+            <div class="rsi-marker" [style.left.%]="rsiValue"></div>
+        </div>
+        <div class="rsi-labels">
+            <span>0</span>
+            <span class="oversold-zone">30</span>
+            <span>50</span>
+            <span class="overbought-zone">70</span>
+            <span>100</span>
+        </div>
+    </div>
+    <div class="rsi-status">
+        <span class="rsi-number" [style.color]="getRSIColor()">{{ rsiValue | number:'1.2-2' }}</span>
+        <span class="rsi-text" [style.color]="getRSIColor()">{{ getRSILabel() }}</span>
+    </div>
+</div>
