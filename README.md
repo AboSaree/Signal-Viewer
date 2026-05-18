@@ -105,6 +105,9 @@ Simply open `index.html` in your browser.
 | **Motor Abnormality** | 0.549 | 0.596 | 0.571 | 47 |
 | **Normal** | 0.333 | 0.136 | 0.194 | 22 |
 
+**Detailed Classification Report:**
+![Classification Report](results%20of%20EEG/classification%20report.png)
+
 **Key Performance Highlights:**
 - Exceptional performance on **Epileptic Interictal** detection (99.4% F1-Score) - critical for clinical applications
 - Strong performance on **Mental Stress** and **Seizure** classification (97.8% and 91.9% F1-Scores respectively)
@@ -156,11 +159,20 @@ The EEG classification engine has been extensively validated on a diverse datase
 - **Selective Confusion**: Minimal cross-class misclassification, indicating strong feature discrimination
 - **Clinical Reliability**: Conditions requiring immediate intervention (Seizure, Epileptic Interictal) show exceptionally low false-negative rates
 
+**Model Confusion Matrix:**
+![Confusion Matrix](results%20of%20EEG/confusion%20matrix%20.png)
+
 #### Training Convergence Analysis
 - **Epoch 0-5**: Rapid learning phase with steep accuracy gradient (55% → 80%)
 - **Epoch 5-10**: Stabilization phase with gradual refinement
 - **Epoch 10-35**: Plateau phase with marginal improvements, indicating effective model saturation
 - **Generalization Gap**: Minimal gap between training and validation curves (<3%), demonstrating excellent generalization
+
+**Accuracy Across Training Epochs:**
+![Accuracy across epochs](results%20of%20EEG/accuracy%20across%20epochs.png)
+
+**Training Loss Convergence:**
+![Loss across epochs](results%20of%20EEG/loss%20across%20epochs%20.png)
 
 #### Model Architecture & Methodology
 - **Foundation**: BIOT (Braindecode Intelligent Oscillation Transformer)
